@@ -1,13 +1,13 @@
-// k30Sensor.cpp
+// K30Sensor.cpp
+#include "K30Sensor.h"
 
-#include "k30Sensor.h"
  
-k30Sensor::k30Sensor(uint8_t i2cAddress, TwoWire &wirePort) : _i2cAddress(i2cAddress), _wire(wirePort)
+K30Sensor::K30Sensor(uint8_t i2cAddress, TwoWire &wirePort) : _i2cAddress(i2cAddress), _wire(wirePort)
 {
 
 }
 
-void k30Sensor::setup()
+void K30Sensor::setup()
 {
     // Begin I2C communication on the user-specified port.
     _wire.begin();
@@ -16,7 +16,7 @@ void k30Sensor::setup()
     // This will depend on your specific sensor's datasheet.
 }
 
-uint16_t k30Sensor::read()
+uint16_t K30Sensor::read()
 {
   int co2_value = 0;  // We will store the CO2 value inside this variable.
 

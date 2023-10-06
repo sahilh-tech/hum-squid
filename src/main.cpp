@@ -1,9 +1,14 @@
 #include <Arduino.h>
 #include <TaskScheduler.h>
 
+
+
 // include all relevant libraries
+//MQTT related Libraries
+#include <Ethernet.h>
+#include <PubSubClient.h>
 
-
+ 
 
 // VERSION NUMBER [UPDATE WITH Github Versions and Changlog.md in project]
 //-------------------------------------------------------------------------------------------------------

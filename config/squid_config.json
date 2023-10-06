@@ -1,0 +1,14 @@
+{
+  "SQUID_ID": "SQUID_001",
+  "NODE_ID": "NODE_001",
+  "WIFI_CONFIG": {
+    "SSID": "YourSSID",
+    "PASSWORD": "YourPassword"
+  },
+  "MQTT_CONFIG": {
+    "MQTT_SERVER": "mqtt.example.com",
+    "MQTT_PORT": 1883,
+    "MQTT_USER": "mqtt_user",
+    "MQTT_PASSWORD": "mqtt_password"
+  }
+}
