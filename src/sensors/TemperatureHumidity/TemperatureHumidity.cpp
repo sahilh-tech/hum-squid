@@ -16,7 +16,8 @@
  * @url https://github.com/DFRobot/DFRobot_SHT3x
 */
 
-#include <DFRobot_SHT3x.h>
+#include "TemperatureHumidity.h"
+
 
 /*!
  * @brief Construct the function
@@ -31,7 +32,7 @@
 
 DFRobot_SHT3x sht3x;
 
-void setup() {
+void TemperatureHumidity::init() {
 
   Serial.begin(9600);
     //Initialize the chip to detect if it can communicate properly.
@@ -97,7 +98,7 @@ void setup() {
   Serial.println("------------------Read data in cycle measurement mode-----------------------");
 }
 
-void loop() {
+uint16_t TemperatureHumidity::read() {
 
   Serial.print("Ambient temperature(°C/F):");
   /**
@@ -148,4 +149,5 @@ void loop() {
     Serial.println("%RH");
   }
   */
+  return sht3x.getHumidityRH();
 }
