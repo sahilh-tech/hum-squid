@@ -23,6 +23,8 @@ struct versionNumber{
     {}
 };
 
+
+
 // Header Pins in Squid 
 // microUSB Pins
 #define U0TXD 1

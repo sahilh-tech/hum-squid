@@ -1,5 +1,5 @@
 #include "ActuatorController.h"
-#include "Config.h"
+#include "config.h"
 
 ActuatorController::ActuatorController() {
     // Constructor code if any
