@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <TaskScheduler.h>
-
+#include "DFRobot_MultiGasSensor.h"
 
 
 // include all relevant libraries
@@ -25,9 +25,11 @@
 versionNumber squidFirmwareVersion(FIRMWARE_MAJOR, FIRMWARE_MINOR, FIRMWARE_PATCH);
 versionNumber squidHardwareVersion(HARDWARE_MAJOR, HARDWARE_MINOR, HARDWARE_PATCH);
 
- 
-//Istantiate Classes
-SerialMenu squidMenu(squidFirmwareVersion, squidHardwareVersion);
+squidConfig config;
+
+//Instantiate Classes
+SerialMenu squidMenu(squidFirmwareVersion, squidHardwareVersion, config);
+ActuatorController controller;
 // Scheduler runner;
 // Task t1(1000, TASK_FOREVER, &myTask);
 
@@ -42,22 +44,18 @@ bool isWarmupComplete = false;
 
 void setup() {
   // debugging serial port (over uUSB)
- 
   squidMenu.init();
+  //squidMenu.loadConfig(config)
+
+
+  // set Digital Output pins:
+  controller.init();
+  controller.setYellowLED();
   delay(2000);
   Serial.println("Hello, world!");
  
-
-  // set Digital Output pins:
-   // controller.init();
-    pinMode(GPIO12, OUTPUT);
-    digitalWrite(GPIO12, LOW);
-
-    pinMode(DRUM_ROTATION_RELAY, OUTPUT);
-    digitalWrite(DRUM_ROTATION_RELAY, LOW);
- 
-    isWarmupComplete = true;
-    Serial.println("Finished initilaisation!");
+  isWarmupComplete = true;
+  Serial.println("Finished initilaisation!");
 }
 
 void loop() { 
@@ -68,8 +66,11 @@ void loop() {
   
   //begin transmitting data to server if warmup has finished
   if(isWarmupComplete == true) {
-    digitalWrite(GPIO12, HIGH);
-    digitalWrite(DRUM_ROTATION_RELAY, HIGH);
+  controller.clearYellowLED();
+  controller.setGreenLED();
+  
   }
+ 
+ 
 }
 

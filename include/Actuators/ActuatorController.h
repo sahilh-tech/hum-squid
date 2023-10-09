@@ -11,7 +11,7 @@
 #define __ACTUATOR_CONTROLLER_H__
 
 #include "Arduino.h"
-#include "Config.h"
+#include "config.h"
 
 
 class ActuatorController {

@@ -11,8 +11,9 @@
 #define SerialMenu_h
 
 #include <Arduino.h>
-#include "Utilities.h"
- 
+#include "Utilities.h" 
+#include "config.h"
+
 #define MAX_WIFI_SSID_LENGTH 33
 #define MAX_ALLOCATED_EEPROM 4096
 
@@ -21,8 +22,10 @@
 class SerialMenu {
 public:
     // WARNING!!eepromSize cannot be greater than   4096 bytes
-    SerialMenu(versionNumber firmware, versionNumber hardware, uint16_t eepromSize=512);
+    SerialMenu(versionNumber firmware, versionNumber hardware, squidConfig& config, 
+               uint16_t eepromSize=512);
     void init();
+    void loadConfig();
     void runSerialMenu();
     void printHelp();
     void printVersion();
@@ -83,6 +86,7 @@ public:
     String readSerialLine();
     void writeStringToEEPROM(uint16_t addr, const String& data, uint8_t maxLength);
     String readStringFromEEPROM(uint16_t addr, uint8_t maxLength);
+    squidConfig& mConfig;
 };
 
 #endif

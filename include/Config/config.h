@@ -23,6 +23,17 @@ struct versionNumber{
     {}
 };
 
+struct squidConfig{
+  uint16_t drumRotationDuration;
+  uint16_t ventHVACDuration;
+  int8_t temperatureThreshold;
+  uint16_t co2Threshold;
+  uint8_t ammoniaThreshold;
+  String wifiSSID;
+  String wifiPassword;
+  uint16_t squidID;
+  uint16_t nodeID;
+};
 
 
 // Header Pins in Squid 

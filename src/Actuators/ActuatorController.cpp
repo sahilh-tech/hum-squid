@@ -10,6 +10,11 @@ void ActuatorController::init() {
     pinMode(VENTILATION_CONTROL_RELAY, OUTPUT);
     pinMode(GREEN_LED, OUTPUT);
     pinMode(YELLOW_LED, OUTPUT);
+
+    digitalWrite(DRUM_ROTATION_RELAY, LOW);
+    digitalWrite(VENTILATION_CONTROL_RELAY, LOW);
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(YELLOW_LED, LOW);
 }
 
 void ActuatorController::setHVACRequest() { 

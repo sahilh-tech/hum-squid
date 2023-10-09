@@ -3,10 +3,12 @@
 
 
 
-SerialMenu::SerialMenu(versionNumber firmware, versionNumber hardware,
+SerialMenu::SerialMenu(versionNumber firmware, versionNumber hardware, squidConfig& config,
                         uint16_t eepromSize) :
     mFirmware(firmware), 
-    mHardware(hardware), mEepromSize(eepromSize) {
+    mHardware(hardware), 
+    mConfig(config),
+    mEepromSize(eepromSize) {
 
 }
 
@@ -20,7 +22,32 @@ void SerialMenu::init(){
     } else {
         EEPROM.begin(mEepromSize);  // Initialize EEPROM
     }
+    
+    // load default values
+    loadConfig();
 
+}
+
+void SerialMenu::loadConfig(){
+    // Load values from EEPROM into the mConfig structure
+    mConfig.drumRotationDuration = getDrumRotation(false); // get drum rotation duration
+    mConfig.ventHVACDuration = getVentControl(false); // get vent control duration
+    mConfig.temperatureThreshold = getTempThreshold(false); // get temperature threshold
+    mConfig.co2Threshold = getCO2Threshold(false); // get CO2 threshold
+    mConfig.ammoniaThreshold = getAmmoniaThreshold(false); // get Ammonia threshold
+
+    // For WiFi SSID and Password, you'll have to read them directly since you don't have getter functions for these
+    char ssidBuffer[maxWifiSSIDLength];
+    getWifiSSID(ssidBuffer, false); // get WiFi SSID
+    mConfig.wifiSSID = String(ssidBuffer);
+
+    // Assuming you have a getWifiPassword function similar to getWifiSSID
+    // char passwordBuffer[maxWifiPasswordLength];
+    // getWifiPassword(passwordBuffer, false); // get WiFi Password
+    // mConfig.wifiPassword = String(passwordBuffer);
+
+    mConfig.squidID = getSquidID(false); // get Squid ID
+    mConfig.nodeID = getNodeID(false); // get Node ID
 }
 
 void SerialMenu::runSerialMenu() {
@@ -62,6 +89,7 @@ void SerialMenu::setDrumRotation(uint32_t seconds) {
 
             // Commit changes to EEPROM
             EEPROM.commit();
+            loadConfig();
             Serial.print("Successfully updated Drum Rotation with ");
             Serial.println(seconds);
         } else {
@@ -98,6 +126,7 @@ void SerialMenu::setVentControl(uint32_t seconds) {
 
             // Commit changes to EEPROM
             EEPROM.commit();
+            loadConfig();
             Serial.print("Successfully updated Vent On Duration with ");
             Serial.println(seconds);
         } else {
@@ -131,7 +160,8 @@ void SerialMenu::setTempThreshold(int32_t degrees) {
         if (current_value != degrees) {
             EEPROM.put(TEMP_THRESHOLD_ADDR, degrees);
             // Commit changes to EEPROM
-            EEPROM.commit();
+            EEPROM.commit(); 
+            loadConfig();
             Serial.print("Successfully updated Temperature Threshold with ");
             Serial.println(degrees);
         }  else {
@@ -166,6 +196,7 @@ void SerialMenu::setCO2Threshold(uint32_t ppm) {
             EEPROM.put(CO2_THRESHOLD_ADDR, ppm);
             // Commit changes to EEPROM
             EEPROM.commit();
+            loadConfig();
             Serial.print("Successfully updated CO2 Threshold with ");
             Serial.println(ppm);
         } else {
@@ -200,8 +231,9 @@ void SerialMenu::setAmmoniaThreshold(uint32_t ppm) {
             EEPROM.put(AMMONIA_THRESHOLD_ADDR, ppm);
             // Commit changes to EEPROM
             EEPROM.commit();
+            loadConfig();
             Serial.print("Successfully updated Ammonia Threshold with ");
-            Serial.println(ppm);
+            Serial.println(ppm); 
         }  else { 
             Serial.print("Unable to update value of Ammonia Threshold with: ");
             Serial.println(ppm);
@@ -248,6 +280,7 @@ uint8_t SerialMenu::getAmmoniaThreshold(bool verbose) {
     String currentPassword = readStringFromEEPROM(WIFI_PASS_ADDR, maxWifiPasswordLength);
     if (ssid != currentSSID) {
         writeStringToEEPROM(WIFI_SSID_ADDR, ssid, maxWifiSSIDLength);
+        loadConfig();
         Serial.print("Successfully updated SSID with ");
         Serial.println(ssid);
     } else {
@@ -256,6 +289,7 @@ uint8_t SerialMenu::getAmmoniaThreshold(bool verbose) {
 
     if (password != currentPassword) {
         writeStringToEEPROM(WIFI_PASS_ADDR, password, maxWifiPasswordLength);
+        loadConfig();
         Serial.print("Successfully updated Password with ");
         Serial.println(password);
     } else {
@@ -288,6 +322,7 @@ void SerialMenu::setSquidID(uint32_t id) {
         EEPROM.put(SQUID_ID_ADDR, id);
         // Commit changes to EEPROM
         EEPROM.commit();
+        loadConfig();
         Serial.print("Successfully updated SquidID with ");
         Serial.println(id);
     } else {
@@ -312,6 +347,7 @@ void SerialMenu::setNodeID(uint32_t id) {
         EEPROM.put(NODE_ID_ADDR, id);
         // Commit changes to EEPROM
         EEPROM.commit();
+        loadConfig();
         Serial.print("Successfully updated NodeID with ");
         Serial.println(id);
     } else {
@@ -587,6 +623,7 @@ void SerialMenu::factoryReset(){
 
     // Commit changes to EEPROM
     EEPROM.commit();
+    loadConfig();
 
     Serial.println("Factory reset completed. All values set to their defaults.");
 }
@@ -600,6 +637,7 @@ void SerialMenu::hardMemoryReset() {
 
   // Commit changes to EEPROM
   EEPROM.commit();
-
+  loadConfig(); 
+  
   Serial.println("Hard memory reset completed. All EEPROM bytes set to zero.");
 }
