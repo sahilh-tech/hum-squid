@@ -9,8 +9,10 @@
 */
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
+#pragma once 
 
 #include "Arduino.h"
+
 
 //Config Data Strucutres
 struct versionNumber{
@@ -33,6 +35,30 @@ struct squidConfig{
   String wifiPassword;
   uint16_t squidID;
   uint16_t nodeID;
+};
+
+// Define a structure to hold sensor data
+struct sensorData {
+  // Metadata
+  uint16_t squidID;               // Squid ID, INT, 16-bit
+  uint32_t timestamp;             // UNIX Timestamp, unsigned int 16-bit
+  uint16_t nodeID;                // Node ID, INT, 32-bit
+  
+  // Sensor values
+  uint16_t soilOxygen;            // Soil Oxygen, 0-25 VOL %, unsigned 16-bit int
+  uint16_t CO2;                   // CO2, 0-10000 ppm, unsigned 16-bit int (max 10000, fits in 16 bits)
+  uint16_t ammonia;               // Ammonia, 0-100 ppm, unsigned 16-bit int
+  uint16_t soilMoisture;          // Soil Moisture, 0-99 %, unsigned 16-bit int
+  
+  // Temperatures using floats with 2 decimal places
+  float soilTempProbe;            // Soil Temp Probe, -40 to 80 °C, float
+  float soilTempProbe1;           // Soil Temp Probe 1, -50 to 105 °C, float
+  float soilTempProbe2;           // Soil Temp Probe 2, -50 to 105 °C, float
+  float soilTempProbe3;           // Soil Temp Probe 3, -50 to 105 °C, float
+  float ambientTemp;              // Ambient Temp, -40 to 120 °C, float
+  
+  uint16_t ambientHumidity;       // Ambient Humidity, 0-99 %, unsigned 16-bit int
+  float enclosureTemp;            // Enclosure Temp, -40 to 80 °C, float
 };
 
 

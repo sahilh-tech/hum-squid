@@ -3,11 +3,12 @@
 
 
 
-SerialMenu::SerialMenu(versionNumber firmware, versionNumber hardware, squidConfig& config,
-                        uint16_t eepromSize) :
+SerialMenu::SerialMenu(versionNumber firmware, versionNumber hardware, squidConfig& config, 
+                        sensorData& squidData, uint16_t eepromSize) :
     mFirmware(firmware), 
     mHardware(hardware), 
     mConfig(config),
+    mSquidData(squidData),
     mEepromSize(eepromSize) {
 
 }
@@ -48,6 +49,10 @@ void SerialMenu::loadConfig(){
 
     mConfig.squidID = getSquidID(false); // get Squid ID
     mConfig.nodeID = getNodeID(false); // get Node ID
+    mSquidData.nodeID = mConfig.nodeID;
+    mSquidData.squidID = mConfig.squidID;
+    Serial.println("Successfully loaded parameters into program");
+    // printSquidConfig(mConfig);
 }
 
 void SerialMenu::runSerialMenu() {
@@ -638,6 +643,6 @@ void SerialMenu::hardMemoryReset() {
   // Commit changes to EEPROM
   EEPROM.commit();
   loadConfig(); 
-  
+
   Serial.println("Hard memory reset completed. All EEPROM bytes set to zero.");
 }

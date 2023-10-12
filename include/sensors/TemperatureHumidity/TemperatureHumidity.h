@@ -10,24 +10,27 @@
 #ifndef __TEMPERATURE_HUMIDITY_H__
 #define __TEMPERATURE_HUMIDITY_H__
 
-#include "Arduino.h"
-#include <DFRobot_SHT3x.h>
+#include <Arduino.h>
+#include "config.h"
+#include <Wire.h>
+#include "DFRobot_SHT20.h"  // Include the SHT20 library
+
+ 
 
 class TemperatureHumidity {
 public:
-    // Constructor: initializes the class with the I2C address of the CO2 sensor.
-    // TemperatureProbe(uint8_t probeAdcPin);
-
-    // Setup function for initializing sensor and I2C communication.
-    void init();
-
-    // Function to read CO2 concentration from the sensor.
-    uint16_t read();
+  TemperatureHumidity(TwoWire &wire, sensorData &data);
+  void init();
+  float readTemp();
+  uint16_t readHumidity(); // returns humidity in percentage with 2 decimal places (multiplied by 100)
+  void updateTempAndHumidity();
+  void printTemp();
+  void printHumidity();
+  void printAll();
 
 private:
-  
- 
- 
+  DFRobot_SHT20 mSHT20;
+  sensorData &mSquidData;
 };
  
 #endif // __TEMPERATURE_HUMIDITY_H__

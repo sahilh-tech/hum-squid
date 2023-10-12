@@ -11,28 +11,32 @@
 #define __TEMPERATURE_PROBE_H__
 
 #include "Arduino.h"
+#include <ADS1X15.h>
+#include <Wire.h>
+#include "config.h"
 
 class TemperatureProbe {
 public:
-    // Constructor: initializes the class with the I2C address of the CO2 sensor.
-    TemperatureProbe(uint8_t probeAdcPin);
-
-    // Setup function for initializing sensor and I2C communication.
+    TemperatureProbe(uint8_t i2cAddress, sensorData& squidData);
     void init();
+    float read(uint8_t channel);
+    void updateSoilTemperatureData();
+    void printProbeData(uint8_t probeIndex);
+    void printAllProbeData();
 
-    // Function to read CO2 concentration from the sensor.
-    uint16_t read();
 
 private:
-  uint8_t mProbeAdcPin;
+  ADS1115 mAdc;
+  sensorData& mSquidData;
   // Thermistor Parameters
   const float mFixedResistor = 10000.0; // fixed external resistor
-  const float mMaxADCValue = 4095.0;    // maximum ADC value for 12 bit resistor
+  const float mMaxADCValue = 32767.0;    // maximum ADC value for 12 bit resistor
   const float mTempInKelvin = 273.15;   // Temp in Kelvin based on external resistance
   const float mBeta = 3977.0;           // Beta coefficient, corrected value
   const float mR0 = 10000.0;            // Resistance at 25C
   const float mT0 = 298.15;             // Temperature at 25C in Kelvin
- 
+  const int mNumSamples = 10;            // Number of samples for averaging
+
 };
  
  

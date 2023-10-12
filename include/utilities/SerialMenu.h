@@ -23,7 +23,7 @@ class SerialMenu {
 public:
     // WARNING!!eepromSize cannot be greater than   4096 bytes
     SerialMenu(versionNumber firmware, versionNumber hardware, squidConfig& config, 
-               uint16_t eepromSize=512);
+               sensorData& squidData, uint16_t eepromSize=512);
     void init();
     void loadConfig();
     void runSerialMenu();
@@ -87,6 +87,7 @@ public:
     void writeStringToEEPROM(uint16_t addr, const String& data, uint8_t maxLength);
     String readStringFromEEPROM(uint16_t addr, uint8_t maxLength);
     squidConfig& mConfig;
+    sensorData& mSquidData;
 };
 
 #endif

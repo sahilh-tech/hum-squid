@@ -11,10 +11,17 @@
 #define UTILITIES_H
 
 #include "config.h"
+#include "SoilMoisture.h"
 
+
+extern SoilMoisture* globalSoilMoistureObject;
+
+void globalPreTransmission(); // for modbus
+void globalPostTransmission(); // for modbus 
 String versionToString(const versionNumber& version);
 bool isPositiveInteger(const String& str);
 bool isInteger(String str);  
-
+void printSquidConfig(const squidConfig& config);
+void printSensorData(const sensorData& data);
  
 #endif

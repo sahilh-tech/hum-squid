@@ -11,5 +11,32 @@
 #define __Ammonia_Sensor_H__
 
 
+#include "config.h"
+#include <Wire.h>
+#include "DFRobot_MultiGasSensor.h"
+ 
+class AmmoniaSensor {
+public:
+  AmmoniaSensor(TwoWire& wire, sensorData& squidData);
+  bool init();
+  void checkWarmUpStatus();
+  void updateAmmoniaConcentration(); 
+  void getAndSaveAmmoniaReading();    
+  void printGasConcentration();
+  void printTemperature();
+  void printAll();
+  //void runScheduler();
+private:
+  sensorData& mSquidData;
+
+  void warmUpCallback();
+  static const uint8_t I2C_ADDRESS = 0x74;
+  DFRobot_GAS_I2C gasSensor;
+  unsigned long warmUpStartTime;
+  static const unsigned long WARM_UP_TIME = 3000;  // 5 minutes in milliseconds  300000
+  // Scheduler runner;
+  // Task warmUpTask;
+  // bool isWarmupComplete;
+};
  
 #endif // __Ammonia_Sensor_H__
