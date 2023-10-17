@@ -1,7 +1,12 @@
 #include "Utilities.h"
- 
-
-
+  
+float roundToDecimalPlaces(float value, int decimalPlaces) {
+    float multiplier = std::pow(10.0f, decimalPlaces);  // calculate 10^n
+    value = value * multiplier;  // shift decimal places to the right by n places
+    value = std::round(value);   // round to the nearest integer
+    value = value / multiplier;  // shift decimal places back to the left by n places
+    return value;
+}
 
 String versionToString(const versionNumber& version) {
     return String(version.majorVersion) + "." + String(version.minorVersion) + "." + String(version.patchVersion);

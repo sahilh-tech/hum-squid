@@ -3,6 +3,7 @@
 
 #include <ModbusMaster.h>  // Include the ModbusMaster library
 #include "config.h"
+#include  "Utilities.h"
 
 // Define Modbus registers
 #define TEMPERATURE_REG 0x0000  // Corresponds to temperature in Celsius
@@ -17,7 +18,7 @@
  
 class SoilMoisture {
 public:
-    SoilMoisture(uint8_t slaveID = 1);  // Constructor
+    SoilMoisture(uint8_t slaveID = 1);  // Constructor default modbus address = 1
     bool init();                   // Initialize Modbus communication
     float readTemperature();        // Read temperature
     float readVWC();                // Read VWC

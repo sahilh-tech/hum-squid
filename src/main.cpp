@@ -4,8 +4,7 @@
 #include "SerialMenu.h" 
 
 // include all relevant libraries
-//MQTT related Libraries
-#include <Ethernet.h>
+//MQTT related Libraries 
 #include <PubSubClient.h>
 
 
@@ -14,11 +13,9 @@
 #include "AmmoniaSensor.h"
 #include "TemperatureHumidity.h"
 #include "SoilTemperature.h" 
+#include "ModBusDriver.h"
 
-
-#include "TemperatureProbe.h"
-#include "SoilMoisture.h"
-
+#include "TemperatureProbe.h" 
 
 // VERSION NUMBER [UPDATE WITH Github Versions and Changlog.md in project]
 //-------------------------------------------------------------------------------------------------------
@@ -44,12 +41,11 @@ SerialMenu squidMenu(squidFirmwareVersion, squidHardwareVersion, config, squidDa
 ActuatorController controller;
 AmmoniaSensor ammoniaSensor(Wire, squidData);
 TemperatureHumidity ambientSensor(Wire, squidData);
+ModBusDriver modbusDriver(squidData);
 
-// SoilTemperature soilTemperature(Wire, squidData);
-
-
+// SoilTemperature soilTemperature(Wire, squidData); 
 //TemperatureProbe temp1(ADC_TEMP_PROBE_2);
-SoilMoisture SoilMoistureSensor;
+//SoilMoisture SoilMoistureSensor;
 
 
 // Scheduler runner;
@@ -57,8 +53,7 @@ SoilMoisture SoilMoistureSensor;
 
 // State Management
 bool isWarmupComplete = false;
-
-#include "DFRobot_MultiGasSensor.h"
+ 
 
  
 
@@ -78,9 +73,10 @@ void setup() {
   ambientSensor.init();
   // Initialize the SoilTemperature object
   // soilTemperature.init();
-  SoilMoistureSensor.init();
+  //SoilMoistureSensor.init();
   //temp1.init();
-
+  modbusDriver.init(1);
+  // soilOxygenSensor.init();
 
   // set Digital Output pins:
   controller.init();
@@ -102,21 +98,20 @@ void loop() {
   if(!isWarmupComplete ) {
 
   } else {
-    float soilMoisture = SoilMoistureSensor.readVWC();
-    float soilTemp = SoilMoistureSensor.readTemperature();
-    Serial.print("soil moisture: ");
-    Serial.println(soilMoisture);
-    Serial.print("soil soilTemp: ");
-    Serial.println(soilTemp); 
-    // controller.clearYellowLED();
-    // controller.setGreenLED();
-    // ammoniaSensor.getAndSaveAmmoniaReading();
-    // ammoniaSensor.printAll();
-    // ambientSensor.updateTempAndHumidity();
-    // ambientSensor.printAll();
-
-
-    // Update the soil temperature data
+    ammoniaSensor.updateAmmoniaConcentration();
+    // float soilMoisture = SoilMoistureSensor.readVWC();
+    // float soilTemp = SoilMoistureSensor.readTemperature();
+    // Serial.print("soil moisture: ");
+    // Serial.println(soilMoisture);
+    // Serial.print("soil soilTemp: ");
+    // Serial.println(soilTemp); 
+    controller.clearYellowLED();
+    controller.setGreenLED();
+    ammoniaSensor.getAndSaveAmmoniaReading();
+   // ammoniaSensor.printAll();
+    ambientSensor.updateTempAndHumidity();
+    // ambientSensor.printAll(); 
+    // Update the soil temperature da ta
       // soilTemperature.updateSoilTemperatureData( );
 
       // // Print individual probe data
@@ -126,12 +121,13 @@ void loop() {
 
       // // Or print all probe data at once
       // soilTemperature.printAllProbeData();
-      
-    //temp1.read();
-   // printSensorData(squidData);
+     // modbusDriver.printSoilOxygenData();
+     modbusDriver.updateSoilOxygenData();
+     modbusDriver.updateSoilMoistureData();
+    //temp1.read(); 
+   modbusDriver.printSoilMoistureData();
+    printSensorData(squidData);
   }
-
-
+ 
   delay(1000);
 }
-
