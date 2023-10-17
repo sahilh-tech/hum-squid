@@ -17,7 +17,7 @@
 
 class TemperatureProbe {
 public:
-    TemperatureProbe(uint8_t i2cAddress, sensorData& squidData);
+    TemperatureProbe(sensorData& squidData, uint8_t i2cAddress= 0x48);
     void init();
     float read(uint8_t channel);
     void updateSoilTemperatureData();
@@ -26,7 +26,7 @@ public:
 
 
 private:
-  ADS1115 mAdc;
+  ADS1115 mAdc; // 0x48 address of ADC
   sensorData& mSquidData;
   // Thermistor Parameters
   const float mFixedResistor = 10000.0; // fixed external resistor

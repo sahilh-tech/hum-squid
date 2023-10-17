@@ -166,7 +166,7 @@ bool ADS1X15::begin(int sda, int scl)
 
 bool ADS1X15::begin()
 {
-  _wire->begin();
+  // _wire->begin();
   if ((_address < 0x48) || (_address > 0x4B)) return false;
   if (! isConnected()) return false;
   return true;

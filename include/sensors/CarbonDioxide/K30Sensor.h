@@ -11,21 +11,19 @@
 #define __K30_SENSOR_PROBE_H__
 
 #include "Arduino.h"
+#include "config.h"
+#include "Wire.h"
 
 class K30Sensor {
 public:
-    // Constructor: initializes the class with the I2C address of the CO2 sensor.
-    K30Sensor();
-
-    // Setup function for initializing sensor and I2C communication.
-    void init();
-
-    // Function to read CO2 concentration from the sensor.
-    uint16_t read();
+  K30Sensor(sensorData& squidData);
+  uint16_t readSensorData(); // Model this from the existing Arduino sketch
+  void printCO2Data();  // Print CO2 data
+  void updateCO2Data(); // Update the CO2 data in the sensorData structure
 
 private:
- 
- 
+  uint8_t const CO2_ADDRESS = 0x68;
+  sensorData& mSquidData;
 };
  
  

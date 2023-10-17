@@ -16,6 +16,7 @@
 #include "ModBusDriver.h"
 
 #include "TemperatureProbe.h" 
+#include "ADS1X15.h"
 
 // VERSION NUMBER [UPDATE WITH Github Versions and Changlog.md in project]
 //-------------------------------------------------------------------------------------------------------
@@ -42,10 +43,8 @@ ActuatorController controller;
 AmmoniaSensor ammoniaSensor(Wire, squidData);
 TemperatureHumidity ambientSensor(Wire, squidData);
 ModBusDriver modbusDriver(squidData);
-
-// SoilTemperature soilTemperature(Wire, squidData); 
-//TemperatureProbe temp1(ADC_TEMP_PROBE_2);
-//SoilMoisture SoilMoistureSensor;
+TemperatureProbe soilTemperatureData(squidData);
+ 
 
 
 // Scheduler runner;
@@ -61,29 +60,24 @@ void setup() {
   // debugging serial port (over uUSB)
   squidMenu.init();  
   Serial.begin(115200);
-
-
-  // setup Ammonia Sesnor
+ 
+  // setup Ammonia Sensor
   if (!ammoniaSensor.init()) {
     Serial.println("NO Devices !");
     while (1) {
       delay(1000);
     }
   }
+  soilTemperatureData.init();
   ambientSensor.init();
-  // Initialize the SoilTemperature object
-  // soilTemperature.init();
-  //SoilMoistureSensor.init();
-  //temp1.init();
-  modbusDriver.init(1);
-  // soilOxygenSensor.init();
+  // Initialize the modbus sensors
+  modbusDriver.init(1); 
 
   // set Digital Output pins:
   controller.init();
   controller.setYellowLED();
   delay(2000);
   Serial.println("Hello, world!");
- 
   
   isWarmupComplete = true;
   Serial.println("Finished initilaisation!");
@@ -98,6 +92,18 @@ void loop() {
   if(!isWarmupComplete ) {
 
   } else {
+    // if (ADS.isReady())
+    // {
+    //   int16_t value = ADS.getValue();
+    //   ADS.requestADC(0);       // request new conversion
+    //   Serial.println(" adc0 raw = ");  
+    //   Serial.println(value);  
+    //   Serial.println(" adc0 refined = ");  
+    //   Serial.println((float)(round(value * 100.0) / 100.0));  
+    // }
+    soilTemperatureData.updateSoilTemperatureData();
+    soilTemperatureData.printAllProbeData();
+
     ammoniaSensor.updateAmmoniaConcentration();
     // float soilMoisture = SoilMoistureSensor.readVWC();
     // float soilTemp = SoilMoistureSensor.readTemperature();

@@ -3,14 +3,15 @@
 
 // Your sensorData structure definition here, or include the header that has it
 
-TemperatureProbe::TemperatureProbe(uint8_t i2cAddress, sensorData& squidData)
-: mAdc(i2cAddress), mSquidData(squidData)
+TemperatureProbe::TemperatureProbe( sensorData& squidData, uint8_t i2cAddress)
+: mSquidData(squidData), mAdc(i2cAddress)
 {
 }
 
 void TemperatureProbe::init()
 {
     mAdc.begin();
+    mAdc.setMode(1);               // SINGLE SHOT MODE
     mAdc.setGain(1);  // Set gain to 4.096V
 }
 
@@ -21,9 +22,10 @@ float TemperatureProbe::read(uint8_t channel)
     long sumVo = 0;
 
     for (int i = 0; i < mNumSamples; i++)
-    {
-        sumVo += mAdc.readADC(channel);
+    {   
+        mAdc.requestADC(channel);       // request new conversion
         delay(10);  // Small delay for more accurate analog reading
+        sumVo += mAdc.getValue(); 
     }
 
     Vo = sumVo / mNumSamples;
