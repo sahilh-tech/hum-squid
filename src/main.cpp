@@ -91,47 +91,19 @@ void loop() {
   // begin transmitting data to server if warmup has finished
   if(!isWarmupComplete ) {
 
-  } else {
-    // if (ADS.isReady())
-    // {
-    //   int16_t value = ADS.getValue();
-    //   ADS.requestADC(0);       // request new conversion
-    //   Serial.println(" adc0 raw = ");  
-    //   Serial.println(value);  
-    //   Serial.println(" adc0 refined = ");  
-    //   Serial.println((float)(round(value * 100.0) / 100.0));  
-    // }
+  } else { 
+    
+    controller.clearYellowLED();
+    controller.setGreenLED();  
     soilTemperatureData.updateSoilTemperatureData();
     soilTemperatureData.printAllProbeData();
 
-    ammoniaSensor.updateAmmoniaConcentration();
-    // float soilMoisture = SoilMoistureSensor.readVWC();
-    // float soilTemp = SoilMoistureSensor.readTemperature();
-    // Serial.print("soil moisture: ");
-    // Serial.println(soilMoisture);
-    // Serial.print("soil soilTemp: ");
-    // Serial.println(soilTemp); 
-    controller.clearYellowLED();
-    controller.setGreenLED();
-    ammoniaSensor.getAndSaveAmmoniaReading();
-   // ammoniaSensor.printAll();
-    ambientSensor.updateTempAndHumidity();
-    // ambientSensor.printAll(); 
-    // Update the soil temperature da ta
-      // soilTemperature.updateSoilTemperatureData( );
+    ammoniaSensor.updateAmmoniaConcentration(); 
 
-      // // Print individual probe data
-      // soilTemperature.printProbeData(0); // Print data for probe 0
-      // soilTemperature.printProbeData(1); // Print data for probe 1
-      // soilTemperature.printProbeData(2); // Print data for probe 2
-
-      // // Or print all probe data at once
-      // soilTemperature.printAllProbeData();
-     // modbusDriver.printSoilOxygenData();
-     modbusDriver.updateSoilOxygenData();
-     modbusDriver.updateSoilMoistureData();
-    //temp1.read(); 
-   modbusDriver.printSoilMoistureData();
+    ambientSensor.updateTempAndHumidity(); 
+    modbusDriver.updateSoilOxygenData();
+    modbusDriver.updateSoilMoistureData(); 
+    modbusDriver.printSoilMoistureData();
     printSensorData(squidData);
   }
  
