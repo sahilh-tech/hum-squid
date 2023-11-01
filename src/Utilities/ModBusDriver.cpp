@@ -118,6 +118,8 @@ float ModBusDriver::readTemperature() {
 float ModBusDriver::readVWC() {
     uint16_t raw_data;
     raw_data = readRegister(soilMoistureSlaveID, VWC_REG);
+    Serial.print("raw data");
+    Serial.println(raw_data);
     return (float)raw_data / 10000.0;  // Dividing by 10000 to convert to percentage
 }
 
@@ -170,11 +172,10 @@ void ModBusDriver::printSoilMoistureData() {
 void ModBusDriver::updateSoilMoistureData() {
     float temperatureData = readTemperature();
    // temperatureData = roundToDecimalPlaces(temperatureData, 2); 
-    float soilMoistureData = readVWC();
-    soilMoistureData = roundToDecimalPlaces(soilMoistureData,2);
+    float soilMoistureData = readVWC(); 
 
     mSquidData.soilTempProbe = temperatureData; //round(temperatureData);
-    mSquidData.soilMoisture = round(soilMoistureData);
+    mSquidData.soilMoisture =  soilMoistureData;
 }
 
 

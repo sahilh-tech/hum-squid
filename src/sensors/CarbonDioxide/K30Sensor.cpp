@@ -20,7 +20,8 @@ uint16_t K30Sensor::readSensorData() {
   delay(10);  // Wait for the sensor to process the command
 
   // Begin Read Sequence
-  Wire.requestFrom(CO2_ADDRESS, 4);
+    Wire.requestFrom((uint8_t)CO2_ADDRESS, (uint8_t)4);
+
   byte i = 0;
   byte buffer[4] = {0, 0, 0, 0};
   while (Wire.available()) {

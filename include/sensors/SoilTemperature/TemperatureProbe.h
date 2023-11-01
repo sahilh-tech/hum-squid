@@ -23,14 +23,15 @@ public:
     void updateSoilTemperatureData();
     void printProbeData(uint8_t probeIndex);
     void printAllProbeData();
+    void printRawData();
 
 
 private:
   ADS1115 mAdc; // 0x48 address of ADC
   sensorData& mSquidData;
   // Thermistor Parameters
-  const float mFixedResistor = 10000.0; // fixed external resistor
-  const float mMaxADCValue = 32767.0;    // maximum ADC value for 12 bit resistor
+  const float mFixedResistor = 8500.0; // fixed external resistor
+  const float mMaxADCValue = 32767.0;    // maximum ADC value for 16 bit ADC // 32767
   const float mTempInKelvin = 273.15;   // Temp in Kelvin based on external resistance
   const float mBeta = 3977.0;           // Beta coefficient, corrected value
   const float mR0 = 10000.0;            // Resistance at 25C

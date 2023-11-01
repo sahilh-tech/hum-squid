@@ -41,14 +41,14 @@ struct squidConfig{
 struct sensorData {
   // Metadata
   uint16_t squidID;               // Squid ID, INT, 16-bit
-  uint32_t timestamp;             // UNIX Timestamp, unsigned int 16-bit
   uint16_t nodeID;                // Node ID, INT, 32-bit
+  uint32_t timestamp;             // UNIX Timestamp, unsigned int 16-bit
   
   // Sensor values
   uint16_t soilOxygen;            // Soil Oxygen, 0-25 VOL %, unsigned 16-bit int
   uint16_t CO2;                   // CO2, 0-10000 ppm, unsigned 16-bit int (max 10000, fits in 16 bits)
   uint16_t ammonia;               // Ammonia, 0-100 ppm, unsigned 16-bit int
-  uint16_t soilMoisture;          // Soil Moisture, 0-99 %, unsigned 16-bit int
+  float soilMoisture;          // Soil Moisture, 0-99 %, unsigned 16-bit int
   
   // Temperatures using floats with 2 decimal places
   float soilTempProbe;            // Soil Temp Probe, -40 to 80 °C, float
@@ -89,14 +89,15 @@ struct sensorData {
 #define ETHERNET_RXD1 26
 #define ETHERNET_RX_CRS_DV 27
 
-// Analog Pins
-#define ADC_TEMP_PROBE_0 34  // [ADC Temp Probe 0]
-#define ADC_TEMP_PROBE_1 35  // [ADC Temp Probe 1]
-#define ADC_TEMP_PROBE_2 39  // [ADC Temp Probe 2] // disconnect IR
+// // Analog Pins
+// #define ADC_TEMP_PROBE_0 34  // [ADC Temp Probe 0]
+// #define ADC_TEMP_PROBE_1 35  // [ADC Temp Probe 1]
+// #define ADC_TEMP_PROBE_2 39  // [ADC Temp Probe 2] // disconnect IR
 
 // Relay IOs (existing)
 #define DRUM_ROTATION_RELAY 32  // [Drum Rotation Relay]
 #define VENTILATION_CONTROL_RELAY 33  // [Vent & HVAC Control Relay]
+#define CO2_PUMP 17             // PIN for controlling the CO2 pump
 #define GREEN_LED  12
 #define YELLOW_LED 17
  
@@ -132,7 +133,7 @@ struct sensorData {
 | GPIO14| HS2_CLK         | UEXT / SD/MMC Card     |  15  | SD_HS2_CLK           |
 | GPIO15| HS2_CMD         | UEXT / SD/MMC Card     |  16  | SD_HS2_CMD           |
 | GPIO16| I2C-SCL         | UEXT                   |  17  | SCL_I2C              |
-| GPIO17| SPI_CS          | UEXT                   |  18  | YELLOW_LED           |
+| GPIO17| SPI_CS          | UEXT                   |  18  | CO2_PUMP             |
 | GPIO18| RS485_TX        |                        |  19  | ETHERNET_MDIO        |
 | GPIO19| RS485_RX        |                        |  20  | ETHERNET_TXD0        |
 | GPIO20|                 |                        |      |                      |
@@ -149,12 +150,12 @@ struct sensorData {
 | GPIO31|                 |                        |      |                      |
 | GPIO32| REL1            | Relays                 |  27  | DRUM_ROTATION_RELAY  |
 | GPIO33| REL2            | Relays                 |  28  | VENTILATION_CONTROL_RELAY |
-| GPI34 | BUT1            | Button                 |  29  | ADC_TEMP_PROBE_0     |
-| GPI35 | CAN-RX          | CAN Driver             |  30  | ADC_TEMP_PROBE_1     |
+| GPI34 | BUT1            | Button                 |  29  |                      |
+| GPI35 | CAN-RX          | CAN Driver             |  30  |                      |
 | GPI36 | U1RXD           | UEXT                   |  31  | RO_RS485             |
 | GPIO37|                 |                        |      |                      |
 | GPIO38|                 |                        |      |                      |
-| GPI39 | IR_RECEIVE      | Infrared Communication |  32  | ADC_TEMP_PROBE_2     |
+| GPI39 | IR_RECEIVE      | Infrared Communication |  32  |                      |
 +-------+-----------------+------------------------+------+----------------------+
 
 

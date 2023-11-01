@@ -23,13 +23,14 @@ public:
     void setHVACRequest();
     void setDrumRotation(); 
     void setGreenLED();
-    void setYellowLED();
-
+   // void setYellowLED();
+    void turnOnCO2Pump();
     // Clear functions
     void clearHVACRequest();
     void clearDrumRotation(); 
     void clearGreenLED();
-    void clearYellowLED();
+ //   void clearYellowLED();
+    void turnOffCO2Pump();
 };
 
 #endif //  __ACTUATOR_CONTROLLER_H__
