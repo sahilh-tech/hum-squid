@@ -6,7 +6,7 @@
 // include all relevant libraries
 //MQTT related Libraries 
 #include <PubSubClient.h>
-
+#include <ETH.h>
 
 // Perpheral libraries
 #include "ActuatorController.h"
@@ -38,10 +38,9 @@ versionNumber squidHardwareVersion(HARDWARE_MAJOR, HARDWARE_MINOR, HARDWARE_PATC
 squidConfig config; //config parameters
 sensorData squidData;
 
-
 //Instantiate Classes
 SerialMenu squidMenu(squidFirmwareVersion, squidHardwareVersion, config, squidData);
-DataManager dataManager;  
+//DataManager dataManager;  
 ActuatorController controller;
 AmmoniaSensor ammoniaSensor(Wire, squidData);
 TemperatureHumidity ambientSensor(Wire, squidData);
@@ -56,32 +55,17 @@ void readAndTransmitData();
 void retryTransmitData();
 
 Scheduler runner;  
-Task co2WarmUpEvent(1000, 1, &co2WarmUpTask);  // 1 minute task, execute only once // 60000
-Task ammoniaWarmUpEvent(5000, 1, &ammoniaWarmUpTask); // 5 minute task, execute only once // 300000
-Task dataTransmitEvent(2000, TASK_FOREVER, &readAndTransmitData); // 1 second task, exec
+Task co2WarmUpEvent(1000, 1, &co2WarmUpTask);  // 1 second task, execute only once // 60000
+Task ammoniaWarmUpEvent(5000, 1, &ammoniaWarmUpTask); // 5 secojd task, execute only once // 300000
+Task dataTransmitEvent(2000, TASK_FOREVER, &readAndTransmitData); // 2 secodnd
 Task retryTransmitEvent(600000, TASK_FOREVER, &retryTransmitData); // Trigger every 10 minutes
 
 
 // State Management
 bool isWarmupComplete = false;
-
-
-
-
-
-
-// int clk = SD_CLK;
-// int cmd = SD_CMD;
-// int d0  = SD_DATA0;
-// int d1  = SD_DATA1;
-// int d2  = SD_DATA2;
-// int d3  = SD_DATA3;
- 
-
-
-
-
-
+SensorState currentState = READ_AMMONIA;
+unsigned long lastSensorUpdateTime = 0;
+const unsigned long sensorUpdateInterval = 50; // 50 milliseconds between readings
 
 
 void setup() {
@@ -92,57 +76,12 @@ void setup() {
   runner.addTask(ammoniaWarmUpEvent);
   runner.addTask(dataTransmitEvent);
   
-
-  squidMenu.init();  
+  
   Serial.begin(115200);
+  //squidMenu.init();
   
 
-    // if(!SD_MMC.begin()){
-    //     Serial.println("Card Mount Failed");
-    //     return;
-    // }
-    // uint8_t cardType = SD_MMC.cardType();
-
-    // if(cardType == CARD_NONE){
-    //     Serial.println("No SD_MMC card attached");
-    //     return;
-    // }
-
-    // Serial.print("SD_MMC Card Type: ");
-    // if(cardType == CARD_MMC){
-    //     Serial.println("MMC");
-    // } else if(cardType == CARD_SD){
-    //     Serial.println("SDSC");
-    // } else if(cardType == CARD_SDHC){
-    //     Serial.println("SDHC");
-    // } else {
-    //     Serial.println("UNKNOWN");
-    // }
-
-    // uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-    // Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
-
-    // listDir(SD_MMC, "/", 0);
-    // createDir(SD_MMC, "/mydir");
-    // listDir(SD_MMC, "/", 0);
-    // removeDir(SD_MMC, "/mydir");
-    // listDir(SD_MMC, "/", 2);
-    // writeFile(SD_MMC, "/hello.txt", "Hello ");
-    // appendFile(SD_MMC, "/hello.txt", "World!\n");
-    // readFile(SD_MMC, "/hello.txt");
-    // deleteFile(SD_MMC, "/foo.txt");
-    // renameFile(SD_MMC, "/hello.txt", "/foo.txt");
-    // readFile(SD_MMC, "/foo.txt");
-    // testFileIO(SD_MMC, "/test.txt");
-    // Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
-    // Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
-
-
-
-
-
-
-  dataManager.init();  // Initialize DataManager
+  //dataManager.init();  // Initialize DataManager
   // Wire.begin();
   // setup Ammonia Sensor
   // if (!ammoniaSensor.init()) {
@@ -157,14 +96,14 @@ void setup() {
    co2WarmUpEvent.enable();
 
   //soilTemperatureData.init();
-  // ambientSensor.init();
+  //ambientSensor.init();
 
 
   // // Initialize the modbus sensors
-  // modbusDriver.init(1); 
+  //modbusDriver.init(1); 
 
   // // set Digital Output pins:
-  controller.init();
+  //controller.init();
   delay(2000);
   Serial.println("Hello, world!");
   
@@ -175,9 +114,9 @@ void setup() {
 void loop() { 
     // Let TaskScheduler handle the tasks
   runner.execute(); 
-  if (Serial.available() > 0) {
-    squidMenu.runSerialMenu();
-  } 
+  // if (Serial.available() > 0) {
+  //   squidMenu.runSerialMenu();
+  // } 
   
   // begin transmitting data to server if warmup has finished
   // Check if both warm-up tasks are complete
@@ -186,13 +125,8 @@ void loop() {
 
     // Enable the read and transmit task only after warm-up is complete
     dataTransmitEvent.enable();
-  }  
-  Serial.println("ON");
-  controller.turnOnCO2Pump();
-  delay(5000);
-  controller.turnOffCO2Pump();
-    Serial.println("OFF");
-    delay(5000);
+  }   
+  //controller.turnOffCO2Pump(); 
 
 }
 
@@ -210,37 +144,68 @@ void co2WarmUpTask() {
    Serial.println("Warm-up for CO2 sensor complete.");
 }
 
-void readAndTransmitData() { 
- 
-    controller.setGreenLED();  
-    //controller.
-    // soilTemperatureData.updateSoilTemperatureData();
-    // soilTemperatureData.printAllProbeData();
-    // soilTemperatureData.printRawData();
-  // soilTemperatureData.
-    // ammoniaSensor.updateAmmoniaConcentration(); 
+void readAndTransmitData() {
+  static unsigned long lastCallTime = 0;
+  unsigned long currentCallTime = millis();
+  Serial.print("readAndTransmitData called at: ");
+  Serial.print(currentCallTime);
+  Serial.print(" ms, Delta since last call: ");
+  Serial.print(currentCallTime - lastCallTime);
+  Serial.println(" ms");
+  lastCallTime = currentCallTime;
 
-    // ambientSensor.updateTempAndHumidity(); 
-    // modbusDriver.updateSoilOxygenData(); 
-    // modbusDriver.updateSoilMoistureData(); 
-    // co2Sensor.updateCO2Data(); 
-    //printSensorData(squidData); 
-    dataManager.updateData(squidData);
-    // controller.turnOnCO2Pump();
-    // delay(1000);
-    // controller.turnOffCO2Pump();
+  
+  unsigned long currentMillis = millis();
+  
+  // Process all sensor readings in a non-blocking manner
+  // while (currentMillis - lastSensorUpdateTime >= sensorUpdateInterval) {
+  //   switch (currentState) {
+  //     case READ_AMMONIA:
+  //       ammoniaSensor.updateAmmoniaConcentration();
+  //       ammoniaSensor.printTemperature();
+  //       ammoniaSensor.printGasConcentration();
+  //       currentState = READ_SOIL_MOISTURE;
+  //       break;
+  //     case READ_SOIL_MOISTURE:
+  //       modbusDriver.updateSoilMoistureData();
+  //       modbusDriver.printSoilMoistureData();
+  //       currentState = READ_TEMP_HUMIDITY;
+  //       break;
+  //     case READ_TEMP_HUMIDITY:
+  //       ambientSensor.updateTempAndHumidity();
+  //       ambientSensor.printTemp();
+  //       ambientSensor.printHumidity();
+  //       currentState = READ_SOIL_OXYGEN;
+  //       break;
+  //     case READ_SOIL_OXYGEN:
+  //       modbusDriver.printSoilOxygenData();
+  //       currentState = READ_CO2;
+  //       break;
+  //     case READ_CO2:
+  //       co2Sensor.updateCO2Data();
+  //       co2Sensor.printCO2Data();
+  //       currentState = END_CYCLE;
+  //       break;
+  //     case END_CYCLE:
+  //       Serial.println("End data");
+  //       Serial.println();
+  //       currentState = READ_AMMONIA; // Start the cycle over on the next call
+  //       return; // End the function here to wait for the next 2-second interval
+  //   }
+  //   lastSensorUpdateTime = millis(); // Reset the last update time
+  // }
 }
  
 
 void retryTransmitData() {
-  if (dataManager.dataPendingTransmission) { // Check the flag
-    // Read data from SD card and try to send it to the server.
-    // If successful, clear the SD card data.
-    // if (dataManager.retrySDTransmitDataToServer()) { // You will need to implement this function
-    //   dataManager.clearDataLog(); // Clear SD card data
-    //   Serial.println("Successfully re-sent SD card data to server and cleared local data.");
-    // }
-  } else {
-    Serial.println("No data pending transmission.");
-  }
+  // if (dataManager.dataPendingTransmission) { // Check the flag
+  //   // Read data from SD card and try to send it to the server.
+  //   // If successful, clear the SD card data.
+  //   // if (dataManager.retrySDTransmitDataToServer()) { // You will need to implement this function
+  //   //   dataManager.clearDataLog(); // Clear SD card data
+  //   //   Serial.println("Successfully re-sent SD card data to server and cleared local data.");
+  //   // }
+  // } else {
+  //   Serial.println("No data pending transmission.");
+  // }
 }

@@ -74,7 +74,7 @@ void ModBusDriver::printSoilOxygenData() {
     float oxygenData = readSoilOxygenData();
     uint16_t roundedOxygenData = round(oxygenData);
     Serial.print("Soil Oxygen = ");
-    Serial.println(roundedOxygenData);
+    Serial.println(oxygenData);
 }
 
 void ModBusDriver::updateSoilOxygenData() {
@@ -165,13 +165,13 @@ void ModBusDriver::printSoilMoistureData() {
     //soilMoistureData = roundToDecimalPlaces(soilMoistureData,2);
     Serial.print("Soil Temp Probe 0 = ");
     Serial.println(temperatureData);
-    Serial.print("Soil Moisture = ");
+    Serial.print("Soil Moisture probe= ");
     Serial.println(soilMoistureData);
 }
 
 void ModBusDriver::updateSoilMoistureData() {
     float temperatureData = readTemperature();
-   // temperatureData = roundToDecimalPlaces(temperatureData, 2); 
+    temperatureData = roundToDecimalPlaces(temperatureData, 2); 
     float soilMoistureData = readVWC(); 
 
     mSquidData.soilTempProbe = temperatureData; //round(temperatureData);

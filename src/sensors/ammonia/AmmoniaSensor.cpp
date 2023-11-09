@@ -47,7 +47,7 @@ void AmmoniaSensor::printGasConcentration() {
 
 void AmmoniaSensor::printTemperature() {
   if (gasSensor.dataIsAvailable()) {
-    Serial.print("Temperature: ");
+    Serial.print("Ammonia SensorTemperature: ");
     Serial.print(AllDataAnalysis.temp);
     Serial.println(" ℃");
   }

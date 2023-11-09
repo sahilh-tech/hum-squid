@@ -25,12 +25,12 @@ void TemperatureHumidity::updateTempAndHumidity() {
 }
 
 void TemperatureHumidity::printTemp() {
-  Serial.print("Temperature: ");
+  Serial.print("Ambient sensor Temperature: ");
   Serial.println(mSquidData.ambientTemp);
 }
 
 void TemperatureHumidity::printHumidity() {
-  Serial.print("Humidity: ");
+  Serial.print("Ambient Sensor Humidity: ");
   Serial.println(mSquidData.ambientHumidity);
 }
 

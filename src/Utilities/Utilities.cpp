@@ -84,6 +84,8 @@ void printSquidConfig(const squidConfig& config) {
 
   Serial.println("---------------------");
 }
+
+
 void printSensorData(const sensorData& data) {
   Serial.println("Sensor Data:");
   
@@ -116,23 +118,23 @@ void printSensorData(const sensorData& data) {
 
   // Print Temperatures
   Serial.print("Soil Temp Probe: ");
-  Serial.print(data.soilTempProbe, 2);
+  Serial.print(data.soilTempProbe);
   Serial.println(" °C");
 
   Serial.print("Soil Temp Probe 1: ");
-  Serial.print(data.soilTempProbe1, 2);
+  Serial.print(data.soilTempProbe1);
   Serial.println(" °C");
 
   Serial.print("Soil Temp Probe 2: ");
-  Serial.print(data.soilTempProbe2, 2);
+  Serial.print(data.soilTempProbe2);
   Serial.println(" °C");
 
   Serial.print("Soil Temp Probe 3: ");
-  Serial.print(data.soilTempProbe3, 2);
+  Serial.print(data.soilTempProbe3);
   Serial.println(" °C");
 
   Serial.print("Ambient Temp: ");
-  Serial.print(data.ambientTemp, 2);
+  Serial.print(data.ambientTemp);
   Serial.println(" °C");
 
   // Print Humidity

@@ -6,7 +6,11 @@
 #include "config.h"
 
 
-
+/*
+ NOTES: Do not immediately read from one device and then read from the next.
+        IF you wait at least 50ms between each device read, it allows enough time
+        for the ModBus driver to change 
+*/
 class ModBusDriver {
 public:
     ModBusDriver(sensorData& squidData);

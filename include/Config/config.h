@@ -37,6 +37,16 @@ struct squidConfig{
   uint16_t nodeID;
 };
 
+enum SensorState {
+  READ_AMMONIA,
+  READ_SOIL_MOISTURE,
+  READ_TEMP_HUMIDITY,
+  READ_SOIL_OXYGEN,
+  READ_CO2,
+  END_CYCLE
+};
+
+
 // Define a structure to hold sensor data
 struct sensorData {
   // Metadata
