@@ -3,14 +3,18 @@
  
  
 
-ModBusDriver::ModBusDriver(sensorData& squidData) : mSquidData(squidData) {
- 
+ModBusDriver::ModBusDriver(sensorData& squidData) : 
+    mSquidData(squidData), 
+    serial2(2) {
+    
 }
 
 bool ModBusDriver::init(uint8_t slaveID) {
     mSlaveID = slaveID;
-    Serial1.begin(9600); 
-    node.begin(mSlaveID, Serial1);
+    serial2.begin(9600, SERIAL_8N1, RO_RS485, DI_RS485); // Use member variable serial2
+    node.begin(mSlaveID, serial2); // Pass serial2 to ModbusMaster
+
+ 
 
     pinMode(DE_RE_RS485, OUTPUT);
     node.preTransmission([this]() { this->preTransmission(); });

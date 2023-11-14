@@ -7,6 +7,8 @@
 //MQTT related Libraries 
 #include <PubSubClient.h>
 #include <ETH.h>
+#include <esp_task_wdt.h>
+
 
 // Perpheral libraries
 #include "ActuatorController.h"
@@ -38,6 +40,9 @@ versionNumber squidHardwareVersion(HARDWARE_MAJOR, HARDWARE_MINOR, HARDWARE_PATC
 squidConfig config; //config parameters
 sensorData squidData;
 
+// initialise hardware serial object
+// HardwareSerial uart2(2); // Use UART2
+
 //Instantiate Classes
 SerialMenu squidMenu(squidFirmwareVersion, squidHardwareVersion, config, squidData);
 //DataManager dataManager;  
@@ -47,6 +52,9 @@ TemperatureHumidity ambientSensor(Wire, squidData);
 ModBusDriver modbusDriver(squidData);
 TemperatureProbe soilTemperatureData(squidData);
 K30Sensor co2Sensor(squidData); 
+
+
+
 
 //tasks
 void ammoniaWarmUpTask();
@@ -69,7 +77,8 @@ const unsigned long sensorUpdateInterval = 50; // 50 milliseconds between readin
 
 
 void setup() {
-
+  // Initialize WDT
+    esp_task_wdt_init(5, true); 
   // debugging serial port (over uUSB)
     // Add tasks to the scheduler
   runner.addTask(co2WarmUpEvent);
@@ -78,53 +87,57 @@ void setup() {
   
   
   Serial.begin(115200);
-  //squidMenu.init();
-  
+  squidMenu.init();
+    Serial.println("Starting up");
 
   //dataManager.init();  // Initialize DataManager
-  // Wire.begin();
-  // setup Ammonia Sensor
-  // if (!ammoniaSensor.init()) {
-  //   Serial.println("NO Devices !");
-  //   while (1) {
-  //     delay(1000);
-  //   }
-  // }
+  //Wire.begin();
+  //setup Ammonia Sensor
+  if (!ammoniaSensor.init()) {
+    Serial.println("NO Ammonia Sensor detected Devices !");
+    while (1) {
+      delay(1000);
+    }
+  }
    ammoniaWarmUpEvent.enable();
+ // pinMode(DE_RE_RS485, OUTPUT);
+  // co2Sensor.init();
+  co2WarmUpEvent.enable();
 
-  // //Cco2.init();
-   co2WarmUpEvent.enable();
-
-  //soilTemperatureData.init();
-  //ambientSensor.init();
+  soilTemperatureData.init();
+  ambientSensor.init();
 
 
   // // Initialize the modbus sensors
-  //modbusDriver.init(1); 
+  modbusDriver.init(1); 
 
   // // set Digital Output pins:
   //controller.init();
   delay(2000);
   Serial.println("Hello, world!");
   
-  isWarmupComplete = true;
+ 
   Serial.println("Finished initilaisation!");
 }
 
 void loop() { 
+  // Feed the watchdog
+  esp_task_wdt_reset();
     // Let TaskScheduler handle the tasks
   runner.execute(); 
-  // if (Serial.available() > 0) {
-  //   squidMenu.runSerialMenu();
-  // } 
+  if (Serial.available() > 0) {
+    squidMenu.runSerialMenu();
+  } 
   
   // begin transmitting data to server if warmup has finished
   // Check if both warm-up tasks are complete
-  if (ammoniaWarmUpEvent.isLastIteration() && co2WarmUpEvent.isLastIteration()) {
+  if (ammoniaWarmUpEvent.isLastIteration() && co2WarmUpEvent.isLastIteration() && !isWarmupComplete) {
     isWarmupComplete = true;
 
     // Enable the read and transmit task only after warm-up is complete
     dataTransmitEvent.enable();
+    Serial.println("dataTransmitEvent initiated...");
+
   }   
   //controller.turnOffCO2Pump(); 
 
@@ -153,47 +166,61 @@ void readAndTransmitData() {
   Serial.print(currentCallTime - lastCallTime);
   Serial.println(" ms");
   lastCallTime = currentCallTime;
-
+  //   ammoniaSensor.updateAmmoniaConcentration();
+  //   ammoniaSensor.printTemperature();
+  //   ammoniaSensor.printGasConcentration();
+  //          co2Sensor.updateCO2Data();
+  //        co2Sensor.printCO2Data();
+  //     ambientSensor.updateTempAndHumidity();
+  //     ambientSensor.printTemp();
+  //     ambientSensor.printHumidity();
+  
   
   unsigned long currentMillis = millis();
   
-  // Process all sensor readings in a non-blocking manner
-  // while (currentMillis - lastSensorUpdateTime >= sensorUpdateInterval) {
-  //   switch (currentState) {
-  //     case READ_AMMONIA:
-  //       ammoniaSensor.updateAmmoniaConcentration();
-  //       ammoniaSensor.printTemperature();
-  //       ammoniaSensor.printGasConcentration();
-  //       currentState = READ_SOIL_MOISTURE;
-  //       break;
-  //     case READ_SOIL_MOISTURE:
-  //       modbusDriver.updateSoilMoistureData();
-  //       modbusDriver.printSoilMoistureData();
-  //       currentState = READ_TEMP_HUMIDITY;
-  //       break;
-  //     case READ_TEMP_HUMIDITY:
-  //       ambientSensor.updateTempAndHumidity();
-  //       ambientSensor.printTemp();
-  //       ambientSensor.printHumidity();
-  //       currentState = READ_SOIL_OXYGEN;
-  //       break;
-  //     case READ_SOIL_OXYGEN:
-  //       modbusDriver.printSoilOxygenData();
-  //       currentState = READ_CO2;
-  //       break;
-  //     case READ_CO2:
-  //       co2Sensor.updateCO2Data();
-  //       co2Sensor.printCO2Data();
-  //       currentState = END_CYCLE;
-  //       break;
-  //     case END_CYCLE:
-  //       Serial.println("End data");
-  //       Serial.println();
-  //       currentState = READ_AMMONIA; // Start the cycle over on the next call
-  //       return; // End the function here to wait for the next 2-second interval
-  //   }
-  //   lastSensorUpdateTime = millis(); // Reset the last update time
-  // }
+  //Process all sensor readings in a non-blocking manner
+  while (currentMillis - lastSensorUpdateTime >= sensorUpdateInterval) {
+    switch (currentState) {
+      case READ_AMMONIA:
+        ammoniaSensor.updateAmmoniaConcentration();
+        ammoniaSensor.printTemperature();
+        ammoniaSensor.printGasConcentration();
+        currentState = READ_SOIL_MOISTURE;
+        break;
+      case READ_SOIL_MOISTURE:
+        modbusDriver.updateSoilMoistureData();
+        modbusDriver.printSoilMoistureData();
+        currentState = READ_TEMP_HUMIDITY;
+        break;
+      case READ_TEMP_HUMIDITY:
+        ambientSensor.updateTempAndHumidity();
+        ambientSensor.printTemp();
+        ambientSensor.printHumidity();
+        currentState = READ_SOIL_OXYGEN;
+        break;
+      case READ_SOIL_OXYGEN:
+        modbusDriver.printSoilOxygenData();
+        currentState = READ_CO2;
+        break;
+      case READ_CO2:
+        co2Sensor.updateCO2Data();
+        co2Sensor.printCO2Data();
+        currentState = READ_SOIL_TEMP;
+        break;
+      case READ_SOIL_TEMP:
+        soilTemperatureData.updateSoilTemperatureData();
+        soilTemperatureData.printAllProbeData();
+        soilTemperatureData.printRawData();
+        currentState = END_CYCLE;
+        break;
+      case END_CYCLE:
+        Serial.println("End data");
+        Serial.println();
+        currentState = READ_AMMONIA; // Start the cycle over on the next call
+        return; // End the function here to wait for the next 2-second interval
+    }
+    lastSensorUpdateTime = millis(); // Reset the last update time
+  }
 }
  
 

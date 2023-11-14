@@ -112,6 +112,7 @@ bool DataManager::tryTransmitToServer() {
   //     return true;
   // Else:
   //     return false;
+  return true;
 }
 //retry data transmission
 //not sure if I need a seperate function for this 
@@ -120,6 +121,7 @@ bool DataManager::retrySDTransmitDataToServer() {
   //     return true;
   // Else:
   //     return false;
+  return true;
 }
 
 /*

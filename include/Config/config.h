@@ -43,6 +43,7 @@ enum SensorState {
   READ_TEMP_HUMIDITY,
   READ_SOIL_OXYGEN,
   READ_CO2,
+  READ_SOIL_TEMP,
   END_CYCLE
 };
 
@@ -117,10 +118,12 @@ struct sensorData {
 #define SCL_I2C 16  // [SCL I2C]
 
 // RS485 UART
-#define DI_RS485 4  // DI [RS485 Bus] // UART TX
-#define RO_RS485 36  // RO [RS485 Bus] // UART RX
-#define DE_RE_RS485 5 // [RE/DE RS485] // Digital Output
+#define DI_RS485 5// 4  // DI [RS485 Bus] // UART TX (RX on RS485)
+#define RO_RS485 35 //36  // RO [RS485 Bus] // UART RX (TX on RS485)
+#define DE_RE_RS485 12//5 // [RE/DE RS485] // Digital Output
  
+// GPIO 35 CAN RX -> UART2 RX => [RS485 RO]
+// GPIO 5 CAN TX => UART2 TX => [RS485 DI] 
 
  /*
 +-------+-----------------+------------------------+------+----------------------+
@@ -130,7 +133,7 @@ struct sensorData {
 | GPIO1 | U0TXD           |                        |   2  | U0TXD                |
 | GPIO2 | HS2_DATA0       | UEXT / SD/MMC Card     |   3  | HS2_DATA0            |
 | GPIO3 | U0RXD           |                        |   4  | U0RXD                |
-| GPIO4 |                 |                        |   5  | DI_RS485             |
+| GPIO4 | U1TX            |                        |   5  | DI_RS485             |
 | GPIO5 | CAN-TX          | CAN Driver             |   6  | DE_RE_RS485          |
 | GPIO6 | SD_CLK          |                        |   7  | SD_CLK               |
 | GPIO7 | SD_DATA0        |                        |   8  | SD_DATA0             |
@@ -176,3 +179,4 @@ pin number reference, link: https://github.com/Nuto/ESP32
 
 */ 
 #endif // __CONFIG_H__
+
