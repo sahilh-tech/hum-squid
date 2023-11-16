@@ -125,13 +125,16 @@ void setup() {
 
 // }
 //   Serial.println("Finished initilaisation!");
-  Serial1.begin(9600); 
+ // Serial1.begin(9600); 
 
 }
 
 void loop() { 
           modbusDriver.updateSoilOxygenData();
-       modbusDriver.printSoilOxygenData();
+     modbusDriver.printSoilOxygenData();
+     delay(50);
+       modbusDriver.updateSoilMoistureData();
+        modbusDriver.printSoilMoistureData();
        delay(1000);
     // Send data on Serial1
   //modbusDriver.testSerial();
