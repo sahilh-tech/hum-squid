@@ -91,56 +91,73 @@ void setup() {
     Serial.println("Starting up");
 
   //dataManager.init();  // Initialize DataManager
-  Wire.begin();
-  // setup Ammonia Sensor
-  if (!ammoniaSensor.init()) {
-    Serial.println("NO Ammonia Sensor detected Devices !");
-    while (1) {
-      delay(1000);
-    }
-  }
+  // Wire.begin();
+  // // setup Ammonia Sensor
+  // if (!ammoniaSensor.init()) {
+  //   Serial.println("NO Ammonia Sensor detected Devices !");
+  //   while (1) {
+  //     delay(1000);
+  //   }
+  // }
    ammoniaWarmUpEvent.enable(); 
 
   co2WarmUpEvent.enable();
 
-  soilTemperatureData.init();
- ambientSensor.init();
+ //  soilTemperatureData.init();
+ // ambientSensor.init();
 
 
   // // Initialize the modbus sensors
-  //modbusDriver.init(1); 
-
+  modbusDriver.init(1); 
+  //modbusDriver.scanForOxygenSensor();
+  Serial.println("Finished scanning");
+  //modbusDriver.scanForOxygenDevices();
   // // set Digital Output pins:
   //controller.init();
   delay(2000);
   Serial.println("Hello, world!");
   //  pinMode(DE_RE_RS485, OUTPUT);
- 
-  Serial.println("Finished initilaisation!");
+//    bool result = modbusDriver.setSoilOxygenSlaveAddress(2);
+//   if (result == true) {
+//     Serial.println("sucessfully updated slave address");
+// }  else {
+//       Serial.println("Error couldn't update slave address");
+
+// }
+//   Serial.println("Finished initilaisation!");
+  Serial1.begin(9600); 
+
 }
 
 void loop() { 
+          modbusDriver.updateSoilOxygenData();
+       modbusDriver.printSoilOxygenData();
+       delay(1000);
+    // Send data on Serial1
+  //modbusDriver.testSerial();
+  // Give some time for data to be sent and received
+ 
   // Feed the watchdog
  // esp_task_wdt_reset();
-    // Let TaskScheduler handle the tasks
-  runner.execute(); 
-  if (Serial.available() > 0) {
-    squidMenu.runSerialMenu();
-  } 
+  //   // Let TaskScheduler handle the tasks
+  // runner.execute(); 
+  // if (Serial.available() > 0) {
+  //   squidMenu.runSerialMenu();
+  // } 
   
-  // begin transmitting data to server if warmup has finished
-  // Check if both warm-up tasks are complete
-  if (ammoniaWarmUpEvent.isLastIteration() && co2WarmUpEvent.isLastIteration() && !isWarmupComplete) {
-    isWarmupComplete = true;
+  // // begin transmitting data to server if warmup has finished
+  // // Check if both warm-up tasks are complete
+  // if (ammoniaWarmUpEvent.isLastIteration() && co2WarmUpEvent.isLastIteration() && !isWarmupComplete) {
+  //   isWarmupComplete = true;
 
-    // Enable the read and transmit task only after warm-up is complete
-    dataTransmitEvent.enable();
-    Serial.println("dataTransmitEvent initiated...");
+  //   // Enable the read and transmit task only after warm-up is complete
+  //   dataTransmitEvent.enable();
+  //   Serial.println("dataTransmitEvent initiated...");
 
-  }   
-  //controller.turnOffCO2Pump(); 
-  //modbusDriver.testLoopBack();
- 
+  // }   
+  // //controller.turnOffCO2Pump(); 
+  // //modbusDriver.testLoopBack();
+
 }
 
 
@@ -190,35 +207,36 @@ void readAndTransmitData() {
   while (currentMillis - lastSensorUpdateTime >= sensorUpdateInterval) {
     switch (currentState) {
       case READ_AMMONIA:
-        ammoniaSensor.updateAmmoniaConcentration();
-        ammoniaSensor.printTemperature();
-        ammoniaSensor.printGasConcentration();
+        // ammoniaSensor.updateAmmoniaConcentration();
+        // ammoniaSensor.printTemperature();
+        // ammoniaSensor.printGasConcentration();
         currentState = READ_SOIL_MOISTURE;
         break;
       case READ_SOIL_MOISTURE:
-        // modbusDriver.updateSoilMoistureData();
-        // modbusDriver.printSoilMoistureData();
+      //  modbusDriver.updateSoilMoistureData();
+      //   modbusDriver.printSoilMoistureData();
         currentState = READ_TEMP_HUMIDITY;
         break;
       case READ_TEMP_HUMIDITY:
-        ambientSensor.updateTempAndHumidity();
-        ambientSensor.printTemp();
-        ambientSensor.printHumidity();
+        // ambientSensor.updateTempAndHumidity();
+        // ambientSensor.printTemp();
+        // ambientSensor.printHumidity();
         currentState = READ_SOIL_OXYGEN;
         break;
       case READ_SOIL_OXYGEN:
-        // modbusDriver.printSoilOxygenData();
+        modbusDriver.updateSoilOxygenData();
+       modbusDriver.printSoilOxygenData();
         currentState = READ_CO2;
         break;
       case READ_CO2:
-        co2Sensor.updateCO2Data();
-        co2Sensor.printCO2Data();
+        // co2Sensor.updateCO2Data();
+        // co2Sensor.printCO2Data();
         currentState = READ_SOIL_TEMP;
         break;
       case READ_SOIL_TEMP:
-        soilTemperatureData.updateSoilTemperatureData();
+        // soilTemperatureData.updateSoilTemperatureData();
         //soilTemperatureData.printAllProbeData();
-        soilTemperatureData.printRawData();
+        // soilTemperatureData.printRawData();
         currentState = END_CYCLE;
         break;
       case END_CYCLE:

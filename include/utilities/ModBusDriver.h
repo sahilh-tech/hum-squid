@@ -3,8 +3,8 @@
 
 #include "ModbusMaster.h"
 #include "Utilities.h"
-#include "config.h" 
-#include <HardwareSerial.h>
+#include "config.h"
+
 
 /*
  NOTES: Do not immediately read from one device and then read from the next.
@@ -34,13 +34,12 @@ public:
 
     void printSoilMoistureData();
     void updateSoilMoistureData(); 
-    void testLoopBack();
+    void scanForOxygenSensor();
+    void testSerial();
 private:
     uint8_t mSlaveID;
     sensorData& mSquidData;
     ModbusMaster node;
-    HardwareSerial serial2; 
-
     uint8_t soilOxygenSlaveID=2;    
     uint8_t soilMoistureSlaveID=1;
     // soil Oxygen Registers

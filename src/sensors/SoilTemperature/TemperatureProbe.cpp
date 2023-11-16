@@ -47,18 +47,18 @@ float TemperatureProbe::read(uint8_t channel)
 
     // Determine the baseline temperature based on the channel
     baselineTemp = rawDataPrevious[channel];
-    Serial.print("baselineTemp = ");
-    Serial.println(baselineTemp);
+    // Serial.print("baselineTemp = ");
+    // Serial.println(baselineTemp);
 
     for (int i = 0; i < mNumSamples; i++)
     {   
         mAdc.requestADC(channel);       // request new conversion
         delay(10);  // Small delay for more accurate analog reading
         interimValue = mAdc.getValue(); 
-        Serial.print("i = ");
-        Serial.print(i);
-        Serial.print(" An R val = ");
-        Serial.println(interimValue);
+        // Serial.print("i = ");
+        // Serial.print(i);
+        // Serial.print(" An R val = ");
+        // Serial.println(interimValue);
 
         // If baselineTemp is 0 and it's the first reading, set baselineTemp to interimValue if it's valid
         if (baselineTemp == 0 && validReadings == 0) {
@@ -86,8 +86,8 @@ float TemperatureProbe::read(uint8_t channel)
     R = mFixedResistor / ((mMaxADCValue / Vo) - 1); 
     temperature = mBeta / (log(R / mR0) + (mBeta / mT0)) - mTempInKelvin;
 
-    Serial.print("Vo =  ");
-    Serial.println(Vo);
+    // Serial.print("Vo =  ");
+    // Serial.println(Vo);
     rawDataPrevious[channel] = Vo;
     return round(temperature * 100.0) / 100.0;  // Round to 2 decimal places
 }
