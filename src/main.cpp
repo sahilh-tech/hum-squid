@@ -78,7 +78,7 @@ const unsigned long sensorUpdateInterval = 50; // 50 milliseconds between readin
 
 void setup() {
   // Initialize WDT
-    esp_task_wdt_init(5, true); 
+  //  esp_task_wdt_init(5, true); 
   // debugging serial port (over uUSB)
     // Add tasks to the scheduler
   runner.addTask(co2WarmUpEvent);
@@ -91,38 +91,37 @@ void setup() {
     Serial.println("Starting up");
 
   //dataManager.init();  // Initialize DataManager
-  //Wire.begin();
-  //setup Ammonia Sensor
+  Wire.begin();
+  // setup Ammonia Sensor
   if (!ammoniaSensor.init()) {
     Serial.println("NO Ammonia Sensor detected Devices !");
     while (1) {
       delay(1000);
     }
   }
-   ammoniaWarmUpEvent.enable();
- // pinMode(DE_RE_RS485, OUTPUT);
+   ammoniaWarmUpEvent.enable(); 
   // co2Sensor.init();
   co2WarmUpEvent.enable();
 
   soilTemperatureData.init();
-  ambientSensor.init();
+ // ambientSensor.init();
 
 
   // // Initialize the modbus sensors
-  modbusDriver.init(1); 
+  //modbusDriver.init(1); 
 
   // // set Digital Output pins:
   //controller.init();
   delay(2000);
   Serial.println("Hello, world!");
-  
+  //  pinMode(DE_RE_RS485, OUTPUT);
  
   Serial.println("Finished initilaisation!");
 }
 
 void loop() { 
   // Feed the watchdog
-  esp_task_wdt_reset();
+ // esp_task_wdt_reset();
     // Let TaskScheduler handle the tasks
   runner.execute(); 
   if (Serial.available() > 0) {
@@ -140,7 +139,8 @@ void loop() {
 
   }   
   //controller.turnOffCO2Pump(); 
-
+  //modbusDriver.testLoopBack();
+ 
 }
 
 
@@ -171,14 +171,22 @@ void readAndTransmitData() {
   //   ammoniaSensor.printGasConcentration();
   //          co2Sensor.updateCO2Data();
   //        co2Sensor.printCO2Data();
-  //     ambientSensor.updateTempAndHumidity();
-  //     ambientSensor.printTemp();
-  //     ambientSensor.printHumidity();
-  
+  // //     ambientSensor.updateTempAndHumidity();
+  // //     ambientSensor.printTemp();
+  // //     ambientSensor.printHumidity();
+  //   soilTemperatureData.updateSoilTemperatureData();
+  //   soilTemperatureData.printAllProbeData();
+  //   soilTemperatureData.printRawData(); 
   
   unsigned long currentMillis = millis();
-  
+//  modbusDriver.printSoilOxygenData();
+
+    //  modbusDriver.updateSoilMoistureData();
+    //  modbusDriver.printSoilMoistureData();
+
   //Process all sensor readings in a non-blocking manner
+
+
   while (currentMillis - lastSensorUpdateTime >= sensorUpdateInterval) {
     switch (currentState) {
       case READ_AMMONIA:
@@ -188,18 +196,18 @@ void readAndTransmitData() {
         currentState = READ_SOIL_MOISTURE;
         break;
       case READ_SOIL_MOISTURE:
-        modbusDriver.updateSoilMoistureData();
-        modbusDriver.printSoilMoistureData();
+        // modbusDriver.updateSoilMoistureData();
+        // modbusDriver.printSoilMoistureData();
         currentState = READ_TEMP_HUMIDITY;
         break;
       case READ_TEMP_HUMIDITY:
-        ambientSensor.updateTempAndHumidity();
-        ambientSensor.printTemp();
-        ambientSensor.printHumidity();
+        // ambientSensor.updateTempAndHumidity();
+        // ambientSensor.printTemp();
+        // ambientSensor.printHumidity();
         currentState = READ_SOIL_OXYGEN;
         break;
       case READ_SOIL_OXYGEN:
-        modbusDriver.printSoilOxygenData();
+        // modbusDriver.printSoilOxygenData();
         currentState = READ_CO2;
         break;
       case READ_CO2:
@@ -220,7 +228,7 @@ void readAndTransmitData() {
         return; // End the function here to wait for the next 2-second interval
     }
     lastSensorUpdateTime = millis(); // Reset the last update time
-  }
+ }
 }
  
 

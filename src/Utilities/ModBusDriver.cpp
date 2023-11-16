@@ -11,38 +11,63 @@ ModBusDriver::ModBusDriver(sensorData& squidData) :
 
 bool ModBusDriver::init(uint8_t slaveID) {
     mSlaveID = slaveID;
-    serial2.begin(9600, SERIAL_8N1, RO_RS485, DI_RS485); // Use member variable serial2
-    node.begin(mSlaveID, serial2); // Pass serial2 to ModbusMaster
+    Serial1.begin(9600); 
+    // node.begin(mSlaveID, Serial1);
+    // serial2.begin(9600,SERIAL_8N1 , RO_RS485, DI_RS485); // Use member variable serial2
+    node.begin(mSlaveID, Serial1); // Pass serial2 to ModbusMaster
 
  
 
-    pinMode(DE_RE_RS485, OUTPUT);
+   // pinMode(DE_RE_RS485, OUTPUT);
     node.preTransmission([this]() { this->preTransmission(); });
     node.postTransmission([this]() { this->postTransmission(); });
     return true;
 }
 
+void  ModBusDriver::testLoopBack(){
+  serial2.write("Hello UART2"); // Send data on UART2
+
+  delay(1000); // Wait for data to be transmitted and received back
+
+  // Read the received data from UART2 and print it on the debug Serial port
+  while (serial2.available()) {
+    char c = serial2.read(); // Read the data back from UART2
+    Serial.print(c); // Print to the debug serial port (UART0)
+  }
+
+  Serial.println(); // Print a newline for readability
+  delay(2000); // Wait before sending the next message
+}
+
 uint16_t ModBusDriver::readRegister(uint8_t slaveID, uint16_t regAddress) {
     uint8_t result;
     uint16_t data[1];
-
+     Serial.println(" setting slaveID... ");
     node.setSlaveId(slaveID);
+        Serial.println("finished setting slaveID");
     result = node.readHoldingRegisters(regAddress, 1);
-    data[0] = node.getResponseBuffer(0);
-    return data[0];
-    // if (result == node.ku8MBSuccess)
-    // {
-    //     return data[0] = node.getResponseBuffer(0);
-    // }  else {
-    //     return 65535; // Return max value on failure
-    // }
+        Serial.print("result finished reading = ");
+            Serial.println(result);
+   // data[0] = node.getResponseBuffer(0);
+    //return data[0];
+    if (result == node.ku8MBSuccess)
+    {
+        return data[0] = node.getResponseBuffer(0);
+    }  else {
+        return 65535; // Return max value on failure
+    }
     
 }
 
 bool ModBusDriver::writeRegister(uint8_t slaveID, uint16_t regAddress, uint16_t value) {
     uint8_t result;
+ 
     setSlaveID(slaveID);
+
     result = node.writeSingleRegister(regAddress, value);
+
+
+
     if (result == node.ku8MBSuccess) { 
         return true;
     } else {
@@ -51,11 +76,11 @@ bool ModBusDriver::writeRegister(uint8_t slaveID, uint16_t regAddress, uint16_t 
 }
 
 void ModBusDriver::preTransmission() {
-    digitalWrite(DE_RE_RS485, HIGH);
+  //  digitalWrite(DE_RE_RS485, HIGH);
 }
 
 void ModBusDriver::postTransmission() {
-    digitalWrite(DE_RE_RS485, LOW);
+  //  digitalWrite(DE_RE_RS485, LOW);
 }
 
 void ModBusDriver::setSlaveID(uint8_t slaveID) {
@@ -108,7 +133,9 @@ bool ModBusDriver::setSoilOxygenSlaveAddress(uint8_t newAddress)
 // Function to read temperature
 float ModBusDriver::readTemperature() {
     uint16_t raw_data;
+    Serial.print("inisde readTempetature");
     raw_data = readRegister(soilMoistureSlaveID, TEMPERATURE_REG);
+    Serial.print("finished readRegister ");
 
     // Check for negative temperature
     if (raw_data & 0x8000) {
@@ -174,12 +201,15 @@ void ModBusDriver::printSoilMoistureData() {
 }
 
 void ModBusDriver::updateSoilMoistureData() {
+       Serial.println("inside updateSoilMoistureData");
     float temperatureData = readTemperature();
+    Serial.println("inside readTemperature complete...");
     temperatureData = roundToDecimalPlaces(temperatureData, 2); 
     float soilMoistureData = readVWC(); 
-
+     Serial.println("inside readVWC complete...");
     mSquidData.soilTempProbe = temperatureData; //round(temperatureData);
     mSquidData.soilMoisture =  soilMoistureData;
+
 }
 
 

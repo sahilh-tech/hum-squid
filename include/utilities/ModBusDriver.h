@@ -34,12 +34,12 @@ public:
 
     void printSoilMoistureData();
     void updateSoilMoistureData(); 
-
+    void testLoopBack();
 private:
     uint8_t mSlaveID;
     sensorData& mSquidData;
     ModbusMaster node;
-    HardwareSerial serial2; // Add this line
+    HardwareSerial serial2; 
 
     uint8_t soilOxygenSlaveID=2;    
     uint8_t soilMoistureSlaveID=1;

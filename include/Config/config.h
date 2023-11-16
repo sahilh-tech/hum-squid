@@ -51,26 +51,27 @@ enum SensorState {
 // Define a structure to hold sensor data
 struct sensorData {
   // Metadata
-  uint16_t squidID;               // Squid ID, INT, 16-bit
-  uint16_t nodeID;                // Node ID, INT, 32-bit
-  uint32_t timestamp;             // UNIX Timestamp, unsigned int 16-bit
+  uint16_t squidID = 0;               // Squid ID, INT, 16-bit
+  uint16_t nodeID = 0;                // Node ID, INT, 32-bit
+  uint32_t timestamp = 0;             // UNIX Timestamp, unsigned int 16-bit
   
   // Sensor values
-  uint16_t soilOxygen;            // Soil Oxygen, 0-25 VOL %, unsigned 16-bit int
-  uint16_t CO2;                   // CO2, 0-10000 ppm, unsigned 16-bit int (max 10000, fits in 16 bits)
-  uint16_t ammonia;               // Ammonia, 0-100 ppm, unsigned 16-bit int
-  float soilMoisture;          // Soil Moisture, 0-99 %, unsigned 16-bit int
+  uint16_t soilOxygen = 0;            // Soil Oxygen, 0-25 VOL %, unsigned 16-bit int
+  uint16_t CO2 = 0;                   // CO2, 0-10000 ppm, unsigned 16-bit int (max 10000, fits in 16 bits)
+  uint16_t ammonia = 0;               // Ammonia, 0-100 ppm, unsigned 16-bit int
+  float soilMoisture = 0.0f;          // Soil Moisture, 0-99 %, unsigned 16-bit int
   
   // Temperatures using floats with 2 decimal places
-  float soilTempProbe;            // Soil Temp Probe, -40 to 80 °C, float
-  float soilTempProbe1;           // Soil Temp Probe 1, -50 to 105 °C, float
-  float soilTempProbe2;           // Soil Temp Probe 2, -50 to 105 °C, float
-  float soilTempProbe3;           // Soil Temp Probe 3, -50 to 105 °C, float
-  float ambientTemp;              // Ambient Temp, -40 to 120 °C, float
+  float soilTempProbe = 0.0f;         // Soil Temp Probe, -40 to 80 °C, float
+  float soilTempProbe1 = 0.0f;        // Soil Temp Probe 1, -50 to 105 °C, float
+  float soilTempProbe2 = 0.0f;        // Soil Temp Probe 2, -50 to 105 °C, float
+  float soilTempProbe3 = 0.0f;        // Soil Temp Probe 3, -50 to 105 °C, float
+  float ambientTemp = 0.0f;           // Ambient Temp, -40 to 120 °C, float
   
-  uint16_t ambientHumidity;       // Ambient Humidity, 0-99 %, unsigned 16-bit int
-  float enclosureTemp;            // Enclosure Temp, -40 to 80 °C, float
+  uint16_t ambientHumidity = 0;       // Ambient Humidity, 0-99 %, unsigned 16-bit int
+  float enclosureTemp = 0.0f;         // Enclosure Temp, -40 to 80 °C, float
 };
+
 
 
 // Header Pins in Squid 
@@ -118,9 +119,9 @@ struct sensorData {
 #define SCL_I2C 16  // [SCL I2C]
 
 // RS485 UART
-#define DI_RS485 5// 4  // DI [RS485 Bus] // UART TX (RX on RS485)
-#define RO_RS485 35 //36  // RO [RS485 Bus] // UART RX (TX on RS485)
-#define DE_RE_RS485 12//5 // [RE/DE RS485] // Digital Output
+#define DI_RS485 4// 4  5// DI [RS485 Bus] // UART TX (RX on RS485)
+#define RO_RS485 36//  35 // RO [RS485 Bus] // UART RX (TX on RS485)
+#define DE_RE_RS485 5//5 12// [RE/DE RS485] // Digital Output
  
 // GPIO 35 CAN RX -> UART2 RX => [RS485 RO]
 // GPIO 5 CAN TX => UART2 TX => [RS485 DI] 
