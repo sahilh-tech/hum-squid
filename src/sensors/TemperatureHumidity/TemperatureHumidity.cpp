@@ -20,8 +20,22 @@ uint16_t TemperatureHumidity::readHumidity() {
 }
 
 void TemperatureHumidity::updateTempAndHumidity() {
-  mSquidData.ambientTemp = readTemp();
-  mSquidData.ambientHumidity = readHumidity();
+    float newTemp = readTemp();
+    int16_t newHumidity = readHumidity();
+
+    // Update ambient temperature if within 10 units of the current value or if the current value is 0 (initial reading)
+    if (abs(mSquidData.ambientTemp - newTemp) <= 10 || mSquidData.ambientTemp == 0.0f) {
+        mSquidData.ambientTemp = newTemp;
+    } else {
+        Serial.println("New temperature reading is too different from the current value, not updating.");
+    }
+
+    // Update ambient humidity if within 10 units of the current value or if the current value is 0 (initial reading)
+    if (abs(mSquidData.ambientHumidity - newHumidity) <= 10 || mSquidData.ambientHumidity == 0) {
+        mSquidData.ambientHumidity = newHumidity;
+    } else {
+        Serial.println("New humidity reading is too different from the current value, not updating.");
+    }
 }
 
 void TemperatureHumidity::printTemp() {

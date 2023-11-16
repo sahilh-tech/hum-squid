@@ -100,11 +100,11 @@ void setup() {
     }
   }
    ammoniaWarmUpEvent.enable(); 
-  // co2Sensor.init();
+
   co2WarmUpEvent.enable();
 
   soilTemperatureData.init();
- // ambientSensor.init();
+ ambientSensor.init();
 
 
   // // Initialize the modbus sensors
@@ -201,9 +201,9 @@ void readAndTransmitData() {
         currentState = READ_TEMP_HUMIDITY;
         break;
       case READ_TEMP_HUMIDITY:
-        // ambientSensor.updateTempAndHumidity();
-        // ambientSensor.printTemp();
-        // ambientSensor.printHumidity();
+        ambientSensor.updateTempAndHumidity();
+        ambientSensor.printTemp();
+        ambientSensor.printHumidity();
         currentState = READ_SOIL_OXYGEN;
         break;
       case READ_SOIL_OXYGEN:
@@ -217,7 +217,7 @@ void readAndTransmitData() {
         break;
       case READ_SOIL_TEMP:
         soilTemperatureData.updateSoilTemperatureData();
-        soilTemperatureData.printAllProbeData();
+        //soilTemperatureData.printAllProbeData();
         soilTemperatureData.printRawData();
         currentState = END_CYCLE;
         break;

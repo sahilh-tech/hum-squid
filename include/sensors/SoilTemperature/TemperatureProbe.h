@@ -37,7 +37,9 @@ private:
   const float mR0 = 10000.0;            // Resistance at 25C
   const float mT0 = 298.15;             // Temperature at 25C in Kelvin
   const int mNumSamples = 10;            // Number of samples for averaging
-
+  
+  float baselineTemp = 0;
+  int16_t rawDataPrevious[3] = {0};
 };
  
  

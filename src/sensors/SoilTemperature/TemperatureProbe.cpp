@@ -46,15 +46,10 @@ float TemperatureProbe::read(uint8_t channel)
     const float threshold = 2000;  // Set a threshold for deviation
 
     // Determine the baseline temperature based on the channel
-    float baselineTemp = 0;
-
-    switch(channel) {
-        case 0: baselineTemp = mSquidData.soilTempProbe1; break;
-        case 1: baselineTemp = mSquidData.soilTempProbe2; break;
-        case 2: baselineTemp = mSquidData.soilTempProbe3; break;
-    }
-    Serial.print(" baselineTemp = ");
+    baselineTemp = rawDataPrevious[channel];
+    Serial.print("baselineTemp = ");
     Serial.println(baselineTemp);
+
     for (int i = 0; i < mNumSamples; i++)
     {   
         mAdc.requestADC(channel);       // request new conversion
@@ -65,16 +60,23 @@ float TemperatureProbe::read(uint8_t channel)
         Serial.print(" An R val = ");
         Serial.println(interimValue);
 
-        // If baselineTemp is 0, use the first reading as the baseline
+        // If baselineTemp is 0 and it's the first reading, set baselineTemp to interimValue if it's valid
         if (baselineTemp == 0 && validReadings == 0) {
-            baselineTemp = interimValue;
+            // Check if the first reading is valid
+            if(interimValue > 0) { // invalid readings have been less than 0 so make sure its greter than 0
+                baselineTemp = interimValue;
+                Serial.print("Setting baseline temp: ");
+                Serial.println(baselineTemp);
+            }  
         }
 
         // Check if the reading is within the acceptable range
-        if (abs(interimValue - baselineTemp) < threshold || validReadings == 0)
+        if (abs(interimValue - baselineTemp) < threshold  )
         {
             sumVo += interimValue;
             validReadings++;
+        } else {
+            Serial.println("Discarded outlier reading");
         }
     }
 
@@ -86,15 +88,31 @@ float TemperatureProbe::read(uint8_t channel)
 
     Serial.print("Vo =  ");
     Serial.println(Vo);
-
+    rawDataPrevious[channel] = Vo;
     return round(temperature * 100.0) / 100.0;  // Round to 2 decimal places
 }
+
 
 void TemperatureProbe::updateSoilTemperatureData()
 {
     mSquidData.soilTempProbe1 = read(0);
     mSquidData.soilTempProbe2 = read(1);
     mSquidData.soilTempProbe3 = read(2);
+
+    Serial.print("Temp Probe ");
+    Serial.print(0);
+    Serial.print(" = ");
+    Serial.println(mSquidData.soilTempProbe1, 2);
+
+    Serial.print("Temp Probe ");
+    Serial.print(1);
+    Serial.print(" = ");
+    Serial.println(mSquidData.soilTempProbe2, 2);
+
+    Serial.print("Temp Probe ");
+    Serial.print(2);
+    Serial.print(" = ");
+    Serial.println(mSquidData.soilTempProbe3, 2);
 }
 
 void TemperatureProbe::printProbeData(uint8_t probeIndex)
