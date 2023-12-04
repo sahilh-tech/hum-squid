@@ -3,25 +3,47 @@
  
  
 
-ModBusDriver::ModBusDriver(sensorData& squidData) : mSquidData(squidData) {
+ModBusDriver::ModBusDriver(sensorData& squidData) : mSquidData(squidData), serialModbus(2) {
  
 }
 
 bool ModBusDriver::init(uint8_t slaveID) {
     mSlaveID = slaveID;
-    Serial1.begin(9600); 
-    node.begin(mSlaveID, Serial1);
-
+//    Serial1.begin(9600); 
+//     node.begin(mSlaveID, Serial1);
+    serialModbus.begin(9600, SERIAL_8N1, RO_RS485, DI_RS485);
+    node.begin(mSlaveID, serialModbus); 
     pinMode(DE_RE_RS485, OUTPUT);
-    node.preTransmission([this]() { this->preTransmission(); });
-    node.postTransmission([this]() { this->postTransmission(); });
+   // pinMode(DE_RE_RS485, OUTPUT);
+   node.preTransmission([this]() { this->preTransmission(); });
+   node.postTransmission([this]() { this->postTransmission(); });
     return true;
+}
+
+void ModBusDriver::testSerial(){
+        // Send data on Serial1
+  serialModbus.println("Hello, Serial1");
+
+    // Give some time for data to be sent and received
+  delay(100); 
+ digitalWrite(DE_RE_RS485, HIGH);
+  // Check if data is available to read
+  while (serialModbus.available()) {
+    // Read the received data and print it to the main Serial
+    char c = serialModbus.read();
+    Serial.print(c);
+  }
+
+  // Wait for a second before sending again
+//   delay(1000);
+//   digitalWrite(GREEN_LED, LOW);
+//   delay(1000);    
 }
 
 uint16_t ModBusDriver::readRegister(uint8_t slaveID, uint16_t regAddress) {
     uint8_t result;
     uint16_t data[1];
-
+ 
     node.setSlaveId(slaveID);
     result = node.readHoldingRegisters(regAddress, 1);
     data[0] = node.getResponseBuffer(0);
@@ -35,25 +57,8 @@ uint16_t ModBusDriver::readRegister(uint8_t slaveID, uint16_t regAddress) {
     
 }
 
-void ModBusDriver::testSerial(){
-        // Send data on Serial1
-  Serial1.println("Hello, Serial1");
 
-    // Give some time for data to be sent and received
-  delay(100); 
- digitalWrite(DE_RE_RS485, HIGH);
-  // Check if data is available to read
-  while (Serial1.available()) {
-    // Read the received data and print it to the main Serial
-    char c = Serial1.read();
-    Serial.print(c);
-  }
 
-  // Wait for a second before sending again
-  delay(1000);
-  digitalWrite(DE_RE_RS485, LOW);
-  delay(1000);    
-}
 void ModBusDriver::scanForOxygenSensor(){
   for (int address = 1; address <= 247; address++) {
     setSlaveID(address);
@@ -82,10 +87,13 @@ bool ModBusDriver::writeRegister(uint8_t slaveID, uint16_t regAddress, uint16_t 
 }
 
 void ModBusDriver::preTransmission() {
+    //digitalWrite(DE_RE_RS485, HIGH);
     digitalWrite(DE_RE_RS485, HIGH);
+ 
 }
 
 void ModBusDriver::postTransmission() {
+   // digitalWrite(DE_RE_RS485, LOW);
     digitalWrite(DE_RE_RS485, LOW);
 }
 
@@ -153,8 +161,7 @@ float ModBusDriver::readTemperature() {
 float ModBusDriver::readVWC() {
     uint16_t raw_data;
     raw_data = readRegister(soilMoistureSlaveID, VWC_REG);
-    Serial.print("raw data");
-    Serial.println(raw_data);
+
     return (float)raw_data / 10000.0;  // Dividing by 10000 to convert to percentage
 }
 

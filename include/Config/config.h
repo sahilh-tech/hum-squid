@@ -53,7 +53,7 @@ struct sensorData {
   // Metadata
   uint16_t squidID = 0;               // Squid ID, INT, 16-bit
   uint16_t nodeID = 0;                // Node ID, INT, 32-bit
-  uint32_t timestamp = 0;             // UNIX Timestamp, unsigned int 16-bit
+  uint32_t timestamp = 0;             // UNIX Timestamp, unsigned int 32-bit
   
   // Sensor values
   uint16_t soilOxygen = 0;            // Soil Oxygen, 0-25 VOL %, unsigned 16-bit int
@@ -110,8 +110,8 @@ struct sensorData {
 #define DRUM_ROTATION_RELAY 32  // [Drum Rotation Relay]
 #define VENTILATION_CONTROL_RELAY 33  // [Vent & HVAC Control Relay]
 #define CO2_PUMP 17             // PIN for controlling the CO2 pump
-#define GREEN_LED  12
-#define YELLOW_LED 17
+#define GREEN_LED  4
+// #define YELLOW_LED 39
  
 
 // I2C Bus
@@ -119,9 +119,9 @@ struct sensorData {
 #define SCL_I2C 16  // [SCL I2C]
 
 // RS485 UART
-#define DI_RS485 4// 4  5// DI [RS485 Bus] // UART TX (RX on RS485)
-#define RO_RS485 36//  35 // RO [RS485 Bus] // UART RX (TX on RS485)
-#define DE_RE_RS485 5//5 12// [RE/DE RS485] // Digital Output
+#define DI_RS485 5  //  DI [RS485 Bus] // UART TX (RX on RS485)
+#define RO_RS485 36 // RO [RS485 Bus] // UART RX (TX on RS485)
+#define DE_RE_RS485 12 // [RE/DE RS485] // Digital Output
  
 // GPIO 35 CAN RX -> UART2 RX => [RS485 RO]
 // GPIO 5 CAN TX => UART2 TX => [RS485 DI] 
@@ -134,15 +134,15 @@ struct sensorData {
 | GPIO1 | U0TXD           |                        |   2  | U0TXD                |
 | GPIO2 | HS2_DATA0       | UEXT / SD/MMC Card     |   3  | HS2_DATA0            |
 | GPIO3 | U0RXD           |                        |   4  | U0RXD                |
-| GPIO4 | U1TX            |                        |   5  | DI_RS485             |
-| GPIO5 | CAN-TX          | CAN Driver             |   6  | DE_RE_RS485          |
+| GPIO4 | U1TX            |                        |   5  | GREEN_LED           |
+| GPIO5 | CAN-TX          | CAN Driver             |   6  | DI_RS485             |
 | GPIO6 | SD_CLK          |                        |   7  | SD_CLK               |
 | GPIO7 | SD_DATA0        |                        |   8  | SD_DATA0             |
 | GPIO8 | SD_DATA1        |                        |   9  | SD_DATA1             |
 | GPIO9 | SD_DATA2        |                        |  10  | SD_DATA2             |
 | GPIO10| SD_DATA3        |                        |  11  | SD_DATA3             |
 | GPIO11| SD_CMD          |                        |  12  | SD_CMD               |
-| GPIO12| IR_Transmit     | Infrared Communication |  13  | GREEN_LED            |
+| GPIO12| IR_Transmit     | Infrared Communication |  13  | DE_RE_RS485            |
 | GPIO13| I2C-SDA         | UEXT                   |  14  | SDA_I2C              |
 | GPIO14| HS2_CLK         | UEXT / SD/MMC Card     |  15  | SD_HS2_CLK           |
 | GPIO15| HS2_CMD         | UEXT / SD/MMC Card     |  16  | SD_HS2_CMD           |
@@ -151,7 +151,7 @@ struct sensorData {
 | GPIO18| RS485_TX        |                        |  19  | ETHERNET_MDIO        |
 | GPIO19| RS485_RX        |                        |  20  | ETHERNET_TXD0        |
 | GPIO20|                 |                        |      |                      |
-| GPIO21| GREEN_LED       |                        |  21  | ETHERNET_TX_EN       |
+| GPIO21|                 |                        |  21  | ETHERNET_TX_EN       |
 | GPIO22| EMAC_TXD1(RMII) | Ethernet               |  22  | ETHERNET_TXD1        |
 | GPIO23| MDC(RMII)       | Ethernet               |  23  | ETHERNET_MDC         |
 | GPIO24|                 |                        |      |                      |

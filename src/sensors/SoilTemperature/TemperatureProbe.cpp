@@ -99,20 +99,20 @@ void TemperatureProbe::updateSoilTemperatureData()
     mSquidData.soilTempProbe2 = read(1);
     mSquidData.soilTempProbe3 = read(2);
 
-    Serial.print("Temp Probe ");
-    Serial.print(0);
-    Serial.print(" = ");
-    Serial.println(mSquidData.soilTempProbe1, 2);
+    // Serial.print("Temp Probe ");
+    // Serial.print(0);
+    // Serial.print(" = ");
+    // Serial.println(mSquidData.soilTempProbe1, 2);
 
-    Serial.print("Temp Probe ");
-    Serial.print(1);
-    Serial.print(" = ");
-    Serial.println(mSquidData.soilTempProbe2, 2);
+    // Serial.print("Temp Probe ");
+    // Serial.print(1);
+    // Serial.print(" = ");
+    // Serial.println(mSquidData.soilTempProbe2, 2);
 
-    Serial.print("Temp Probe ");
-    Serial.print(2);
-    Serial.print(" = ");
-    Serial.println(mSquidData.soilTempProbe3, 2);
+    // Serial.print("Temp Probe ");
+    // Serial.print(2);
+    // Serial.print(" = ");
+    // Serial.println(mSquidData.soilTempProbe3, 2);
 }
 
 void TemperatureProbe::printProbeData(uint8_t probeIndex)

@@ -4,6 +4,7 @@
 #include "ModbusMaster.h"
 #include "Utilities.h"
 #include "config.h"
+#include <HardwareSerial.h>
 
 
 /*
@@ -37,6 +38,7 @@ public:
     void scanForOxygenSensor();
     void testSerial();
 private:
+    HardwareSerial serialModbus;
     uint8_t mSlaveID;
     sensorData& mSquidData;
     ModbusMaster node;
