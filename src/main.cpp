@@ -23,7 +23,7 @@
 #include "K30Sensor.h"
 
 // VERSION NUMBER  
-//-------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------- 
 #define FIRMWARE_MAJOR 0 
 #define FIRMWARE_MINOR 0 
 #define FIRMWARE_PATCH 1
@@ -31,13 +31,13 @@
 #define HARDWARE_MAJOR 0 
 #define HARDWARE_MINOR 0
 #define HARDWARE_PATCH 1
-//-------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 
 versionNumber squidFirmwareVersion(FIRMWARE_MAJOR, FIRMWARE_MINOR, FIRMWARE_PATCH);
 versionNumber squidHardwareVersion(HARDWARE_MAJOR, HARDWARE_MINOR, HARDWARE_PATCH);
 
 // Static IP address configuration
-IPAddress staticIP(192, 168, 1, 101); // ESP32 static IP // Make sure to update this for every new node
+IPAddress staticIP(192, 168, 1, 101); // ESP32 static IP UPDATE THIS FOR EVERY SQUID
 IPAddress gateway(192, 168, 1, 1);    // Gateway (usually the router IP)
 IPAddress subnet(255, 255, 255, 0);   // Subnet Mask
 IPAddress primaryDNS(8, 8, 8, 8);     // Optional: Google DNS
@@ -49,7 +49,7 @@ const char* mqtt_user = "hum";          // MQTT username
 const char* mqtt_password = "masternode"; // MQTT password
 const int mqtt_port = 1883;
 char topic[50]; 
-const char *testTopic = "sensor_data_topic/1";
+char ventRequestTopic[50];
 
 
 // MQTT client
@@ -65,6 +65,9 @@ sensorData squidData;
 // Global Variables
 String csvString; // CSV string to hold aggregated data
 int publishCount = 0; // Counter to track when to publish
+unsigned long triggerTime = 0;
+bool isVentSet = false;    // Variable to track the pin state
+
 
 //Instantiate Classes
 SerialMenu squidMenu(squidFirmwareVersion, squidHardwareVersion, config, squidData);
@@ -76,11 +79,6 @@ ModBusDriver modbusDriver(squidData);
 TemperatureProbe soilTemperatureData(squidData);
 K30Sensor co2Sensor(squidData); 
 
-//tasks
-void ammoniaWarmUpTask();
-void co2WarmUpTask();
-void collectSensorData(); 
-void aggregateAndPublishData();
 
 // mqtt and network functions
 void reconnectToMQTT();
@@ -88,21 +86,29 @@ void mqttCallback(char* topic, byte* payload, unsigned int length);
 String mqttStateToString(int state);
 void WiFiEvent(WiFiEvent_t event); 
 
+
+//tasks
+void ammoniaWarmUpTask();
+void co2WarmUpTask();
+void collectSensorData(); 
+void aggregateAndPublishData();
+void ventilationCheck();
+void turnOnCO2Pump();  
+
+
 //Task Scheduler Events
 Scheduler runner;  
-Task co2WarmUpEvent(1000, 1, &co2WarmUpTask);  // 1 second task, execute only once // 60000
-Task ammoniaWarmUpEvent(5000, 1, &ammoniaWarmUpTask); // 5 second task, execute only once // 300000
-Task dataCollectionEvent(1000, TASK_FOREVER, &collectSensorData); //60000 = 1 minute 
-Task dataPublishEvent(2000, TASK_FOREVER, &aggregateAndPublishData); //300000 = every 5 minutes
+Task co2WarmUpEvent(1000, 1, &co2WarmUpTask);  //  execute only once // 60000
+Task ammoniaWarmUpEvent(5000, 1, &ammoniaWarmUpTask); //   execute only once // 300000
+Task dataCollectionEvent(60000, TASK_FOREVER, &collectSensorData); //60000 = 1 minute 
+Task dataPublishEvent(300000, TASK_FOREVER, &aggregateAndPublishData);//300000 = every 5 min
+Task ventilationCheckEvent(1000, TASK_FOREVER, &ventilationCheck);// every second
+Task turnOnCO2PumpEvent(45000, TASK_ONCE, &turnOnCO2Pump); // Runs 45 seconds after being enabled
+
+
 
 // State Management
-bool isWarmupComplete = false;
-SensorState currentState = READ_AMMONIA;
-unsigned long lastSensorUpdateTime = 0;
-const unsigned long sensorUpdateInterval = 50; // 50 milliseconds between readings
-
-
-
+bool isWarmupComplete = false; 
 bool eth_connected = false;
 
 
@@ -115,6 +121,9 @@ void setup() {
   runner.addTask(ammoniaWarmUpEvent);
   runner.addTask(dataCollectionEvent);
   runner.addTask(dataPublishEvent);
+  runner.addTask(ventilationCheckEvent);
+  runner.addTask(turnOnCO2PumpEvent);
+
 
   Serial.begin(115200);
   squidMenu.init();
@@ -166,11 +175,13 @@ void setup() {
 
   client.subscribe("timestamp");
   snprintf(topic, sizeof(topic), "sensor_data_topic/%d", squidData.squidID);
-
-
+  snprintf(ventRequestTopic, sizeof(ventRequestTopic), "squidActuation/ventRequest/%d", squidData.squidID);
  
+
   delay(2000);
-  Serial.println("Finished Initialisation!");  
+  Serial.println("Finished Initialisation!"); 
+
+  //config.temperatureThreshold = 20;
 }
 
 void loop() {  
@@ -187,17 +198,23 @@ void loop() {
   
   // begin transmitting data to server if warmup has finished
   // Check if both warm-up tasks are complete
-  if (ammoniaWarmUpEvent.isLastIteration() && co2WarmUpEvent.isLastIteration() && !isWarmupComplete) {
+  if (ammoniaWarmUpEvent.isLastIteration() && co2WarmUpEvent.isLastIteration() &&
+     !isWarmupComplete) {
     isWarmupComplete = true;
     controller.setGreenLED();
     // Enable the read and transmit task only after warm-up is complete
     dataCollectionEvent.enable();
     dataPublishEvent.enable();
+    ventilationCheckEvent.enable();
     Serial.println("dataTransmitEvent initiated...");
 
   }    
 }
 
+void turnOnCO2Pump() {
+    controller.turnOnCO2Pump();
+    Serial.println("Turn on co2 pump.");
+}
 
 void ammoniaWarmUpTask() {
   ammoniaWarmUpEvent.disable();
@@ -212,68 +229,65 @@ void co2WarmUpTask() {
    Serial.println("Warm-up for CO2 sensor complete.");
 }
 
-void collectSensorData() {
-  // Use globalTimestamp for your data 
-  Serial.print(" Timestamp: ");
-  Serial.println(squidData.timestamp);
+void ventilationCheck() {  
+  if (((millis() - triggerTime) >= (config.ventHVACDuration * 1000)) && isVentSet) {
+    controller.clearHVACRequest();
+    isVentSet = false;  
+    config.temperatureThreshold = 60;
+  }
 
-  static unsigned long lastCallTime = 0;
-  unsigned long currentCallTime = millis();
-  Serial.print("collectSensorData called at: ");
-  Serial.print(currentCallTime);
-  Serial.print(" ms, Delta since last call: ");
-  Serial.print(currentCallTime - lastCallTime);
-  Serial.println(" ms");
-  lastCallTime = currentCallTime; 
-  
-  unsigned long currentMillis = millis(); 
-
-  //Process all sensor readings in a non-blocking manner
-  while (currentMillis - lastSensorUpdateTime >= sensorUpdateInterval) {
-    switch (currentState) {
-      case READ_AMMONIA:
-        ammoniaSensor.updateAmmoniaConcentration();
-        // ammoniaSensor.printTemperature();
-        // ammoniaSensor.printGasConcentration();
-        currentState = READ_SOIL_MOISTURE;
-        break;
-      case READ_SOIL_MOISTURE:
-       modbusDriver.updateSoilMoistureData();
-        // modbusDriver.printSoilMoistureData();
-        currentState = READ_TEMP_HUMIDITY;
-        break;
-      case READ_TEMP_HUMIDITY:
-        ambientSensor.updateTempAndHumidity();
-        // ambientSensor.printTemp();
-        // ambientSensor.printHumidity();
-        currentState = READ_SOIL_OXYGEN;
-        break;
-      case READ_SOIL_OXYGEN:
-        modbusDriver.updateSoilOxygenData();
-      //  modbusDriver.printSoilOxygenData();
-        currentState = READ_CO2;
-        break;
-      case READ_CO2:
-        co2Sensor.updateCO2Data();
-        // co2Sensor.printCO2Data();
-        currentState = READ_SOIL_TEMP;
-        break;
-      case READ_SOIL_TEMP:
-        soilTemperatureData.updateSoilTemperatureData();
-        // soilTemperatureData.printAllProbeData();
-        // soilTemperatureData.printRawData();
-        currentState = END_CYCLE;
-        break;
-      case END_CYCLE:
-        // Serial.println("End data");
-        // Serial.println();
-        //printSensorData(squidData);
-        currentState = READ_AMMONIA; // Start the cycle over on the next call
-        return; // End the function here to wait for the next 2-second interval
+  if (((squidData.ammonia >= config.ammoniaThreshold) || 
+      (squidData.CO2 >=  config.co2Threshold) || 
+      (squidData.ambientTemp >=  config.temperatureThreshold )) && !isVentSet)
+  {
+    controller.setHVACRequest();
+    isVentSet= true;
+    triggerTime = millis();
+  }
+  if(isVentSet) {
+    // publish HVAC request topic 
+    bool publishResult = client.publish(ventRequestTopic, "Vent Request Set");
+    if (publishResult) {
+    Serial.println("Data published successfully.");
+    } else {
+    Serial.println("Failed to publish data.");
     }
-    lastSensorUpdateTime = millis(); // Reset the last update time
- }
+  }
+
 }
+
+
+void collectSensorData() {
+ 
+  ammoniaSensor.updateAmmoniaConcentration();
+  ammoniaSensor.printTemperature();
+  ammoniaSensor.printGasConcentration();
+  delay(50);
+  modbusDriver.updateSoilMoistureData();
+  modbusDriver.printSoilMoistureData();
+  delay(50);
+  ambientSensor.updateTempAndHumidity();
+  ambientSensor.printTemp();
+  ambientSensor.printHumidity();
+  delay(50);
+  modbusDriver.updateSoilOxygenData();
+  modbusDriver.printSoilOxygenData();
+  delay(50);
+  co2Sensor.updateCO2Data();
+  co2Sensor.printCO2Data();
+  delay(50);
+  soilTemperatureData.updateSoilTemperatureData();
+  soilTemperatureData.printAllProbeData();
+  soilTemperatureData.printRawData();
+
+  printSensorData(squidData);
+      Serial.println("Turn off pump.");
+  controller.turnOffCO2Pump();
+  turnOnCO2PumpEvent.enable();
+
+
+ 
+ } 
  
 
 void aggregateAndPublishData() {
@@ -298,28 +312,22 @@ void aggregateAndPublishData() {
   // Check if it's time to publish (every 3rd aggregation)
   if (publishCount >= 3) {
     Serial.print("publishing data on topic: "); 
-    Serial.println(testTopic);  
+    Serial.println(topic);  
 
-      // Debugging: Print the CSV string size
+  // Debugging: Print the CSV string size
   Serial.print("CSV String Size: ");
   Serial.println(csvString.length());
-    Serial.print("full csv = "); 
-    Serial.println(csvString); 
+  Serial.print("full csv = "); 
+  Serial.println(csvString); 
 
-    
-    // Prepend header row to the CSV string
-    String fullCsv = "Squid ID,Node ID,TimeStamp,Soil Oxygen,CO2,Ammonia,Soil Moisture,Soil Temp Probe,Soil Temp Probe 1,Soil Temp Probe 2,Soil Temp Probe 3,Ambient Temp,Ambient Humidity\n" + csvString;
-
-    // Publish the data
-    //client.publish(testTopic, fullCsv.c_str()); // QoS 1, retained message
+     
   // Attempt to publish
-  bool publishResult = client.publish(topic, csvString.c_str(), true); // QoS 1, retained message
+  bool publishResult = client.publish(topic, csvString.c_str(), true); //QoS 1
   if (publishResult) {
     Serial.println("Data published successfully.");
   } else {
     Serial.println("Failed to publish data.");
   }
-//  client.publish(testTopic,  (const char*)csvString, strlen(csvString)); 
     // Reset the CSV string and counter
     csvString = "";
     publishCount = 0;
@@ -340,17 +348,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
             // Convert the payload to an unsigned long
             uint32_t timestamp = strtoul(strPayload, NULL, 10);
             squidData.timestamp = timestamp; // Update squidData.timestamp
-            
-            // Serial.print("Timestamp updated: ");
-            // Serial.println(squidData.timestamp);
+             
         } else {
             Serial.println("Invalid payload length for Unix timestamp");
         }
     }
-}
-
-
-
+} 
 
 void reconnectToMQTT() {
   while (!client.connected()) {
@@ -383,8 +386,7 @@ String mqttStateToString(int state) {
   }
 }
 
-
-
+ 
 void WiFiEvent(WiFiEvent_t event) {
     switch (event) {
         case SYSTEM_EVENT_ETH_START:

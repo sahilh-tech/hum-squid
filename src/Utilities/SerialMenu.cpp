@@ -453,7 +453,7 @@ String SerialMenu::readSerialLine() {
         
         // Check for end of line
         if (ch == '\n' || ch == '\r') {
-            Serial.println("received cmomand");
+            Serial.println("recieved command");
             break;
         }
         
@@ -473,16 +473,17 @@ String SerialMenu::readSerialLine() {
     return received;
 }
 void SerialMenu::handleInput() {
-    // Handle user input from the Serial interface
     String input = readSerialLine();
+    input.trim(); // Trim whitespace from the input
+
     if (input.length() > 0) {
         if (input.startsWith("help")) {
             printHelp();
         } else if (input.startsWith("getVersion")) {
             printVersion();
         } else if (input.startsWith("setDrumRotation ")) {
-            String arg = input.substring(16);
- 
+            String arg = input.substring(strlen("setDrumRotation "));
+            arg.trim();
             if (isPositiveInteger(arg)) {
                 setDrumRotation(arg.toInt());
             } else {
@@ -490,8 +491,9 @@ void SerialMenu::handleInput() {
             }
         } else if (input.startsWith("getDrumRotation")) {
             Serial.println(getDrumRotation());
-        }  else if (input.startsWith("setVentControl ")) {
-            String arg = input.substring(16);
+        } else if (input.startsWith("setVentControl ")) {
+            String arg = input.substring(strlen("setVentControl "));
+            arg.trim();
             if (isPositiveInteger(arg)) {
                 setVentControl(arg.toInt());
             } else {
@@ -500,17 +502,18 @@ void SerialMenu::handleInput() {
         } else if (input.startsWith("getVentControl")) {
             Serial.println(getVentControl());
         } else if (input.startsWith("setTempThreshold ")) {
-            String arg = input.substring(17);
-            // Check if valid integer (including negative)
+            String arg = input.substring(strlen("setTempThreshold "));
+            arg.trim();
             if (isInteger(arg)) {
-                setTempThreshold(arg.toInt()); 
+                setTempThreshold(arg.toInt());
             } else {
                 Serial.println("Invalid argument. Please enter an integer between -20 and 100 for temperature threshold.");
             }
         } else if (input.startsWith("getTempThreshold")) {
             Serial.println(getTempThreshold());
         } else if (input.startsWith("setCO2Threshold ")) {
-            String arg = input.substring(16);
+            String arg = input.substring(strlen("setCO2Threshold "));
+            arg.trim();
             if (isInteger(arg)) {
                 setCO2Threshold(arg.toInt());
             } else {
@@ -519,7 +522,8 @@ void SerialMenu::handleInput() {
         } else if (input.startsWith("getCO2Threshold")) {
             Serial.println(getCO2Threshold());
         } else if (input.startsWith("setAmmoniaThreshold ")) {
-            String arg = input.substring(20);
+            String arg = input.substring(strlen("setAmmoniaThreshold "));
+            arg.trim();
             if (isInteger(arg)) {
                 setAmmoniaThreshold(arg.toInt());
             } else {
@@ -528,12 +532,16 @@ void SerialMenu::handleInput() {
         } else if (input.startsWith("getAmmoniaThreshold")) {
             Serial.println(getAmmoniaThreshold());
         } else if (input.startsWith("setWifi ")) {
-            int firstSpace = input.indexOf(' ', 8);
-            String ssid = input.substring(8, firstSpace);
-            String password = input.substring(firstSpace + 1);
+            String arg = input.substring(strlen("setWifi "));
+            int firstSpace = arg.indexOf(' ');
+            String ssid = arg.substring(0, firstSpace);
+            ssid.trim();
+            String password = arg.substring(firstSpace + 1);
+            password.trim();
             setWifiCredentials(ssid, password);
         } else if (input.startsWith("setSquidID ")) {
-            String arg = input.substring(11);
+            String arg = input.substring(strlen("setSquidID "));
+            arg.trim();
             if (isInteger(arg)) {
                 uint16_t id = arg.toInt();
                 setSquidID(id);
@@ -543,8 +551,9 @@ void SerialMenu::handleInput() {
         } else if (input.startsWith("getSquidID")) {
             getSquidID();
         } else if (input.startsWith("setNodeID ")) {
-            String arg = input.substring(10);
-             if (isInteger(arg)) {
+            String arg = input.substring(strlen("setNodeID "));
+            arg.trim();
+            if (isInteger(arg)) {
                 uint16_t id = arg.toInt();
                 setNodeID(id);
             } else {
@@ -557,16 +566,16 @@ void SerialMenu::handleInput() {
         } else if (input.startsWith("factoryReset")) {
             factoryReset();
             Serial.println("Factory Reset executed.");
-        }
-        else if (input.startsWith("hardMemoryReset")) {
+        } else if (input.startsWith("hardMemoryReset")) {
             hardMemoryReset();
             Serial.println("Hard Memory Reset executed.");
-        } else
-        {
+        } else {
             Serial.println("Invalid command. Type 'help' for a list of available commands.");
         }
     }
 }
+
+
 
 void SerialMenu::writeStringToEEPROM(uint16_t addr, const String& data, uint8_t maxLength) {
         if (data.length() > maxLength - 1) {
