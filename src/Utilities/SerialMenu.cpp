@@ -90,7 +90,7 @@ void SerialMenu::setDrumRotation(uint32_t seconds) {
         uint16_t current_value;
         EEPROM.get(DRUM_ROTATION_ADDR, current_value);
         if (current_value != seconds) {
-            EEPROM.put(DRUM_ROTATION_ADDR, seconds);
+            EEPROM.put(DRUM_ROTATION_ADDR, (uint16_t)seconds);
 
             // Commit changes to EEPROM
             EEPROM.commit();
@@ -127,7 +127,7 @@ void SerialMenu::setVentControl(uint32_t seconds) {
         uint16_t current_value;
         EEPROM.get(VENT_CONTROL_ADDR, current_value);
         if (current_value != seconds) {
-            EEPROM.put(VENT_CONTROL_ADDR, seconds);
+            EEPROM.put(VENT_CONTROL_ADDR, (uint16_t)seconds);
 
             // Commit changes to EEPROM
             EEPROM.commit();
@@ -163,7 +163,7 @@ void SerialMenu::setTempThreshold(int32_t degrees) {
         int8_t current_value;
         EEPROM.get(TEMP_THRESHOLD_ADDR, current_value);
         if (current_value != degrees) {
-            EEPROM.put(TEMP_THRESHOLD_ADDR, degrees);
+            EEPROM.put(TEMP_THRESHOLD_ADDR, (int8_t)degrees);
             // Commit changes to EEPROM
             EEPROM.commit(); 
             loadConfig();
@@ -198,7 +198,7 @@ void SerialMenu::setCO2Threshold(uint32_t ppm) {
         uint16_t current_value;
         EEPROM.get(CO2_THRESHOLD_ADDR, current_value);
         if (current_value != ppm) {
-            EEPROM.put(CO2_THRESHOLD_ADDR, ppm);
+            EEPROM.put(CO2_THRESHOLD_ADDR, (uint16_t)ppm);
             // Commit changes to EEPROM
             EEPROM.commit();
             loadConfig();
@@ -233,7 +233,7 @@ void SerialMenu::setAmmoniaThreshold(uint32_t ppm) {
         uint8_t current_value;
         EEPROM.get(AMMONIA_THRESHOLD_ADDR, current_value);
         if (current_value != ppm) {
-            EEPROM.put(AMMONIA_THRESHOLD_ADDR, ppm);
+            EEPROM.put(AMMONIA_THRESHOLD_ADDR, (uint8_t)ppm);
             // Commit changes to EEPROM
             EEPROM.commit();
             loadConfig();
@@ -324,7 +324,7 @@ void SerialMenu::setSquidID(uint32_t id) {
     uint16_t current_id;
     EEPROM.get(SQUID_ID_ADDR, current_id);
     if (current_id != id) {
-        EEPROM.put(SQUID_ID_ADDR, id);
+        EEPROM.put(SQUID_ID_ADDR, (uint16_t)id);
         // Commit changes to EEPROM
         EEPROM.commit();
         loadConfig();
@@ -349,7 +349,7 @@ void SerialMenu::setNodeID(uint32_t id) {
     uint16_t current_id;
     EEPROM.get(NODE_ID_ADDR, current_id);
     if (current_id != id) {
-        EEPROM.put(NODE_ID_ADDR, id);
+        EEPROM.put(NODE_ID_ADDR, (uint16_t)id);
         // Commit changes to EEPROM
         EEPROM.commit();
         loadConfig();

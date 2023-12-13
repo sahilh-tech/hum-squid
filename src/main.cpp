@@ -37,7 +37,6 @@ versionNumber squidFirmwareVersion(FIRMWARE_MAJOR, FIRMWARE_MINOR, FIRMWARE_PATC
 versionNumber squidHardwareVersion(HARDWARE_MAJOR, HARDWARE_MINOR, HARDWARE_PATCH);
 
 // Static IP address configuration
-IPAddress staticIP(192, 168, 1, 102); // ESP32 static IP UPDATE THIS FOR EVERY SQUID
 IPAddress gateway(192, 168, 1, 1);    // Gateway (usually the router IP)
 IPAddress subnet(255, 255, 255, 0);   // Subnet Mask
 IPAddress primaryDNS(8, 8, 8, 8);     // Optional: Google DNS
@@ -99,8 +98,8 @@ void ventilationCheck();
 Scheduler runner;  
 Task co2WarmUpEvent(1000, 1, &co2WarmUpTask);  //  execute only once // 60000
 Task ammoniaWarmUpEvent(5000, 1, &ammoniaWarmUpTask); //   execute only once // 300000
-Task dataCollectionEvent(60000, TASK_FOREVER, &collectSensorData); //60000 = 1 minute 
-Task dataPublishEvent(300000, TASK_FOREVER, &aggregateAndPublishData);//300000 = every 5 min
+Task dataCollectionEvent(5000, TASK_FOREVER, &collectSensorData); //60000 = 1 minute 
+Task dataPublishEvent(15000, TASK_FOREVER, &aggregateAndPublishData);//300000 = every 5 min
 Task ventilationCheckEvent(1000, TASK_FOREVER, &ventilationCheck);// every second
 
 
@@ -130,10 +129,10 @@ void setup() {
   // setup Ammonia Sensor
   if (!ammoniaSensor.init()) {
     Serial.println("NO Ammonia Sensor detected Devices !");
-    while (1) {
+ //   while (1) {
           Serial.println("NO Ammonia Sensor detected Devices !");
-      delay(1000);
-    }
+//      delay(1000);
+//    }
   }
   ammoniaWarmUpEvent.enable(); 
   co2WarmUpEvent.enable();
@@ -146,21 +145,39 @@ void setup() {
   controller.init();
 
  
-  // intitialise ethernet port
+  //intitialise ethernet port
     // Initialize Ethernet
     WiFi.onEvent(WiFiEvent);
     ETH.begin();
  
  
   if (ETH.linkUp() && !eth_connected) {
-    Serial.println("Ethernet link is up, configuring static IP...");
-    ETH.config(staticIP, gateway, subnet, primaryDNS, secondaryDNS);
-    IPAddress ip = ETH.localIP();
-    IPAddress subnet = ETH.subnetMask();
-    Serial.print("IP Address: ");
-    Serial.println(ip);
-    Serial.print("Subnet Mask: ");
-    Serial.println(subnet);
+    uint8_t lastOctet = 100 + squidData.squidID; // Make sure this does not exceed 255
+    if (lastOctet <= 255) {
+      IPAddress staticIP(192, 168, 1, lastOctet); // Set the static IP
+      Serial.println("Ethernet link is up, configuring static IP...");
+      ETH.config(staticIP, gateway, subnet, primaryDNS, secondaryDNS);
+      IPAddress ip = ETH.localIP();
+      IPAddress subnet = ETH.subnetMask();
+      Serial.print("IP Address: ");
+      Serial.println(ip);
+      Serial.print("Subnet Mask: ");
+      Serial.println(subnet);
+    } else {
+      IPAddress staticIP(192, 168, 1, 255); // Set the static IP 
+      Serial.println("Ethernet link is up, default address not set configuring static IP...");
+      ETH.config(staticIP, gateway, subnet, primaryDNS, secondaryDNS);
+      IPAddress ip = ETH.localIP();
+      IPAddress subnet = ETH.subnetMask();
+      Serial.print("IP Address: ");
+      Serial.println(ip);
+      Serial.print("Subnet Mask: ");
+      Serial.println(subnet);
+    }
+
+
+
+
   } 
   client.setKeepAlive(37856);
   client.setSocketTimeout(37856);
@@ -173,22 +190,15 @@ void setup() {
   client.subscribe("timestamp");
   snprintf(topic, sizeof(topic), "sensor_data_topic/%d", squidData.squidID);
   snprintf(ventRequestTopic, sizeof(ventRequestTopic), "squidActuation/ventRequest/%d", squidData.squidID);
+  snprintf(ventEventTopic, sizeof(ventEventTopic), "squidActuation/ventEvent/%d", squidData.squidID);
  
-
   delay(2000);
   Serial.println("Finished Initialisation!"); 
 
   //config.temperatureThreshold = 20;
 }
 
-void loop() {  
-
-  // controller.turnOnCO2Pump();
-  //  Serial.println("turnOnCO2Pump"); 
-  // delay(2000);
-  // controller.turnOffCO2Pump();
-  //  Serial.println("turnOffCO2Pump"); 
-  // delay(2000);
+void loop() {   
   //Feed the watchdog
   // esp_task_wdt_reset();
     // Let TaskScheduler handle the tasks
@@ -228,7 +238,14 @@ void co2WarmUpTask() {
 
 void ventilationCheck() {  
   // Check if the ventilation duration has elapsed
+  // Serial.print("config.ventHVACDuration =");
+  // Serial.println(config.ventHVACDuration );
+  // Serial.print("triggerTime =");
+  // Serial.println(triggerTime );
+  // Serial.print("isVentSet =");
+  // Serial.println(isVentSet );
   if (((millis() - triggerTime) >= (config.ventHVACDuration * 1000)) && isVentSet) {
+      Serial.println("inside final check to turn off vent control");
     controller.clearHVACRequest();
     eventDataString = String(squidData.squidID) + "," + 
                       String(squidData.nodeID) + "," + 
@@ -238,15 +255,15 @@ void ventilationCheck() {
                       String('0') + "," +    
                       String("false") + "," +      // Temp Trigger
                       String('0') + "\n";
-    client.publish(ventRequestTopic, eventDataString.c_str());
+    client.publish(ventEventTopic, eventDataString.c_str());
     isVentSet = false;
   }
 
   // Check for new triggers only if the ventilation is not already active
-  if (!isVentSet) {
+  if (!isVentSet) { 
     bool co2Trigger = squidData.CO2 >= config.co2Threshold;
     bool tempTrigger = squidData.ambientTemp >= config.temperatureThreshold;
-
+ 
     if (co2Trigger || tempTrigger) {
       controller.setHVACRequest();
       isVentSet = true;
@@ -259,93 +276,24 @@ void ventilationCheck() {
                         String(co2Trigger ? squidData.CO2 : '0') + "," +    
                         String(tempTrigger) + "," + 
                         String(tempTrigger ? squidData.ambientTemp : '0') + "\n";
-      client.publish(ventRequestTopic, eventDataString.c_str());
+      client.publish(ventEventTopic, eventDataString.c_str());
     }
   }
+    if(isVentSet) {
+    // publish HVAC request topic 
+    if (!client.connected()) {
+        reconnectToMQTT();
+    } else if (client.connected()) {
+    bool publishResult = client.publish(ventRequestTopic, "Vent Request Set");
+    if (publishResult) {
+    // Serial.println("Data published successfully.");
+    } else {
+     // Serial.println("Failed to publish data.");
+    }
+  }
+  } 
 }
-
-// void ventilationCheck() {  
-// // Vessel ID	
-// /*
-// Squid ID	,
-// Node ID	
-// TimeStamp	
-// Actuator Value	
-// Trigger CO2
-// Trigger CO2 Value	
-// Trigger Temp.	
-// Trigger Temp. Value
-// */ 
-//   if (((millis() - triggerTime) >= (config.ventHVACDuration * 1000)) && isVentSet) {
-//     controller.clearHVACRequest();
-//       eventDataString = String(squidData.squidID) + "," + 
-//       String(squidData.nodeID) + "," + 
-//       String(squidData.timestamp) + "," +
-//       String("VENT REQUEST OFF") + "," +
-//       String("false") + "," +      // CO2 Trigger
-//       String('0') + "," +    
-//       String("false") + "," +      // Temp Trigger
-//       String('0') + "\n";
-//       // publish HVAC request topic 
-//       bool publishResult = client.publish(ventRequestTopic, eventDataString.c_str());
-//         if (publishResult) {
-//         Serial.println("Data published successfully.");
-//         } else {
-//       //  Serial.println("Failed to publish data.");
-//       }
-   
-//     isVentSet = false;  
-
-//   //  config.temperatureThreshold = 60; for testing only
-//   }
-//   // if CO2 threshold is set
-//   if ((squidData.CO2 >=  config.co2Threshold) && !isVentSet)
-//   {
-//     controller.setHVACRequest();
-//     isVentSet= true;
-//     triggerTime = millis();
-//     eventDataString = String(squidData.squidID) + "," + 
-//                       String(squidData.nodeID) + "," + 
-//                       String(squidData.timestamp) + "," +
-//                       String("VENT REQUEST ON") + "," +
-//                       String("true") + "," +      // CO2 Trigger
-//                       String(squidData.CO2) + "," +    
-//                       String("false") + "," +      // Temp Trigger
-//                       String('0') + "\n";
-
-//   // if temp threshold is set
-//   } else if((squidData.ambientTemp >=  config.temperatureThreshold ) && !isVentSet)
-//   {
-//     controller.setHVACRequest();
-//     isVentSet= true;
-//     triggerTime = millis();
-//     eventDataString = String(squidData.squidID) + "," + 
-//                   String(squidData.nodeID) + "," + 
-//                   String(squidData.timestamp) + "," +
-//                   String("VENT REQUEST ON") + "," +
-//                   String("false") + "," +      // CO2 Trigger
-//                   String('0') + "," +    
-//                   String("true") + "," +      // Temp Trigger
-//                   String(squidData.ambientTemp) + "\n";
-
-//   // if both co2 and temp threshold is set
-//   } else if ((squidData.ambientTemp >=  config.temperatureThreshold ) && 
-//              (squidData.CO2 >=  config.co2Threshold)   && !isVentSet)
-//   {
-//     controller.setHVACRequest();
-//     isVentSet= true;
-//     triggerTime = millis();
-//         eventDataString = String(squidData.squidID) + "," + 
-//                   String(squidData.nodeID) + "," + 
-//                   String(squidData.timestamp) + "," +
-//                   String("VENT REQUEST") + "," +
-//                   String("true") + "," +      // CO2 Trigger
-//                   String(squidData.CO2) + "," +    
-//                   String("true") + "," +      // Temp Trigger
-//                   String(squidData.ambientTemp) + "\n";
-//   } 
-
-// }
+ 
 
 
 void collectSensorData() {
