@@ -134,7 +134,7 @@ struct sensorData {
 | GPIO1 | U0TXD           |                        |   2  | U0TXD                |
 | GPIO2 | HS2_DATA0       | UEXT / SD/MMC Card     |   3  | HS2_DATA0            |
 | GPIO3 | U0RXD           |                        |   4  | U0RXD                |
-| GPIO4 | U1TX            |                        |   5  | GREEN_LED           |
+| GPIO4 | U1TX            |                        |   5  | GREEN_LED            |
 | GPIO5 | CAN-TX          | CAN Driver             |   6  | DI_RS485             |
 | GPIO6 | SD_CLK          |                        |   7  | SD_CLK               |
 | GPIO7 | SD_DATA0        |                        |   8  | SD_DATA0             |
@@ -142,7 +142,7 @@ struct sensorData {
 | GPIO9 | SD_DATA2        |                        |  10  | SD_DATA2             |
 | GPIO10| SD_DATA3        |                        |  11  | SD_DATA3             |
 | GPIO11| SD_CMD          |                        |  12  | SD_CMD               |
-| GPIO12| IR_Transmit     | Infrared Communication |  13  | DE_RE_RS485            |
+| GPIO12| IR_Transmit     | Infrared Communication |  13  | DE_RE_RS485          |
 | GPIO13| I2C-SDA         | UEXT                   |  14  | SDA_I2C              |
 | GPIO14| HS2_CLK         | UEXT / SD/MMC Card     |  15  | SD_HS2_CLK           |
 | GPIO15| HS2_CMD         | UEXT / SD/MMC Card     |  16  | SD_HS2_CMD           |
