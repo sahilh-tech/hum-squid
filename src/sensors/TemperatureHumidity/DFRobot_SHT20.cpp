@@ -28,7 +28,8 @@ float DFRobot_SHT20::readHumidity(void)
 {
     uint16_t rawHumidity = readValue(TRIGGER_HUMD_MEASURE_NOHOLD);
     if(rawHumidity == ERROR_I2C_TIMEOUT || rawHumidity == ERROR_BAD_CRC){
-        return(rawHumidity);
+        Serial.println("Error reading humidity");
+        return(200); // return obvious out of bounds value when error reading 
     }
     float tempRH = rawHumidity * (125.0 / 65536.0);
     float rh = tempRH - 6.0;
@@ -39,8 +40,9 @@ float DFRobot_SHT20::readTemperature(void)
 {
     uint16_t rawTemperature = readValue(TRIGGER_TEMP_MEASURE_NOHOLD);
     if(rawTemperature == ERROR_I2C_TIMEOUT || rawTemperature == ERROR_BAD_CRC){
- 
-        return(rawTemperature);
+        Serial.println("Error reading temperature");
+
+        return(200); // return obvious out of bounds value when error reading 
     }
     float tempTemperature = rawTemperature * (175.72 / 65536.0);
     float realTemperature = tempTemperature - 46.85;

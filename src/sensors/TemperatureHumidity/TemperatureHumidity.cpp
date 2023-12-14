@@ -24,7 +24,7 @@ void TemperatureHumidity::updateTempAndHumidity() {
     int16_t newHumidity = readHumidity();
 
     // Ignore temperature readings above 100
-    if (newTemp > 100.0f) {
+    if ((newTemp > 100.0f) || (newTemp < -20.0f) )   {
         Serial.println("Temperature reading is above 100, ignoring.");
     } else {
         // Update ambient temperature if within 10 units of the current value or if the current value is 0 (initial reading)
@@ -36,7 +36,7 @@ void TemperatureHumidity::updateTempAndHumidity() {
     }
 
     // Ignore humidity readings above 100
-    if (newHumidity > 100) {
+    if ((newHumidity > 100) || (newHumidity < 0)) {
         Serial.println("Humidity reading is above 100, ignoring.");
     } else {
         // Update ambient humidity if within 10 units of the current value or if the current value is 0 (initial reading)

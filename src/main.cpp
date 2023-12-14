@@ -98,8 +98,8 @@ void ventilationCheck();
 Scheduler runner;  
 Task co2WarmUpEvent(1000, 1, &co2WarmUpTask);  //  execute only once // 60000
 Task ammoniaWarmUpEvent(5000, 1, &ammoniaWarmUpTask); //   execute only once // 300000
-Task dataCollectionEvent(5000, TASK_FOREVER, &collectSensorData); //60000 = 1 minute 
-Task dataPublishEvent(15000, TASK_FOREVER, &aggregateAndPublishData);//300000 = every 5 min
+Task dataCollectionEvent(30000, TASK_FOREVER, &collectSensorData); //60000 = 1 minute 
+Task dataPublishEvent(300000, TASK_FOREVER, &aggregateAndPublishData);//300000 = every 5 min
 Task ventilationCheckEvent(1000, TASK_FOREVER, &ventilationCheck);// every second
 
 
@@ -251,11 +251,12 @@ void ventilationCheck() {
                       String(squidData.nodeID) + "," + 
                       String(squidData.timestamp) + "," +
                       String("VENT REQUEST OFF") + "," +
-                      String("false") + "," +      // CO2 Trigger
+                      String('0') + "," +      // CO2 Trigger
                       String('0') + "," +    
-                      String("false") + "," +      // Temp Trigger
+                      String('0') + "," +      // Temp Trigger
                       String('0') + "\n";
     client.publish(ventEventTopic, eventDataString.c_str());
+    bool publishResult = client.publish(ventRequestTopic, "Vent Request Off");
     isVentSet = false;
   }
 
@@ -268,16 +269,21 @@ void ventilationCheck() {
       controller.setHVACRequest();
       isVentSet = true;
       triggerTime = millis();
+
       eventDataString = String(squidData.squidID) + "," + 
                         String(squidData.nodeID) + "," + 
                         String(squidData.timestamp) + "," +
                         String("VENT REQUEST ON") + "," +
                         String(co2Trigger) + "," + 
-                        String(co2Trigger ? squidData.CO2 : '0') + "," +    
+                        String(co2Trigger ? squidData.CO2 : 0) + "," +    
                         String(tempTrigger) + "," + 
-                        String(tempTrigger ? squidData.ambientTemp : '0') + "\n";
+                        String(tempTrigger ? squidData.ambientTemp : 0) + "\n";
       client.publish(ventEventTopic, eventDataString.c_str());
+
+        Serial.println("squidData.CO2 = "); 
+        Serial.println(squidData.CO2);  
     }
+
   }
     if(isVentSet) {
     // publish HVAC request topic 
@@ -298,7 +304,7 @@ void ventilationCheck() {
 
 void collectSensorData() {
   controller.turnOnCO2Pump();
-    delay(500);
+    delay(250);
   ammoniaSensor.updateAmmoniaConcentration();
   ammoniaSensor.printTemperature();
   ammoniaSensor.printGasConcentration();
@@ -399,11 +405,14 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 } 
 
 void reconnectToMQTT() {
+  // Generate a unique client ID by appending squidID to "ESP32Client"
+    String clientId = "ESP32ClientSquidID" + String(squidData.squidID);
+
     // Loop until we're reconnected
     while (!client.connected()) {
         Serial.print("Attempting MQTT connection...");
         // Attempt to connect
-        if (client.connect("ESP32Client", mqtt_user, mqtt_password)) {
+        if (client.connect(clientId.c_str(), mqtt_user, mqtt_password)) {
             Serial.println("connected");
             // Once connected, resubscribe
             client.subscribe("timestamp");

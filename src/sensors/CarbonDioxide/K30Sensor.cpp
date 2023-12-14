@@ -41,24 +41,30 @@ uint16_t K30Sensor::readSensorData() {
   if (sum == buffer[3]) { 
     return co2_value;
   } else { 
-    return 0;
+    return 65535; // checksum failure in error
   }
 }
 
 void K30Sensor::printCO2Data() {
   int co2Value = readSensorData();
-  if (co2Value > 0) {
+  if ((co2Value > 0) && (co2Value < 10000)) {
     Serial.print("CO2 Data = ");
     Serial.println(co2Value);
-  } else {
+  } else if (co2Value >= 65535 ){
     Serial.println("Checksum failed / Communication failure");
   }
 }
 
 void K30Sensor::updateCO2Data() {
-  int co2Value = readSensorData();
+  uint16_t co2Value = readSensorData();
+  if ((co2Value > 0) && (co2Value < 10000)) {
+    mSquidData.CO2 = co2Value;  
+  } else if (co2Value >= 65535 ){
+    Serial.println("co2 error, unable to update value");
+  }
+
   if (co2Value > 0) {
-    mSquidData.CO2 = co2Value;
+  
   }
   // Handle error case if needed
 }
